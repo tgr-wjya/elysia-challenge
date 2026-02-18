@@ -26,6 +26,8 @@ i completed 5 elysia rest api milestone project
     status: t.UnionEnum(['pending', 'in-progress', 'completed']);
     ```
 
+- what the hell is hooks??
+
 ## realization
 
 - i couldn't stress this enough but yes elysia is easy as i always said.
