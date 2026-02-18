@@ -10,6 +10,7 @@ import { swagger } from '@elysiajs/swagger';
 
 // Milestone 1 schema.
 // Initialize the schema and minimum with TypeBox.
+// TODO: Fix Swagger not knowing the schema. Elysia only tells Swagger about schemas if you put them in that second "options" object (the hook).
 const UserSchema = t.Object({
   username: t.String({ minLength: 3 }),
   // Let's use Numeric in this case since it'll help convert literal number into string for us.
@@ -32,13 +33,13 @@ const app = new Elysia()
   // Milestone 1: Is that it, really? So easy.
   // Okay, I just found out this might be wrong, let me change it.
   // TODO: It might be wrong, fix it but double check everything
+  // TODO: You need to put the schema in the Hook (the second argument) and use { body } from the context.
   .post('/echo', () => UserSchema)
 
   // Milestone 2: Task Reader
   // Wow, its easy, since its easy let me at least decorate the JSON with real Task API schema.
   // Btw for future me, if you don't understand.
   // I make the response to be a handler here which works like a function
-  // ? I'll ask the LLM later, when I use `Bun.file()` its still successful, reading the JSON. Are we using `.json` to validate or to expect it instead??
   .get('/tasks', ({ set }) => Bun.file('tasks.json').json())
 
   // Milestone 3: Write file.
@@ -47,11 +48,14 @@ const app = new Elysia()
     const body = await Bun.file('tasks.json').json();
 
     const newTask = {
+      // TODO: Since body is the array you just read from the file, body.Date doesn't exist. It should just be Date.now().
       id: body.Date.now(),
     };
 
     // Push new task and write file??
     body.push(newTask);
+
+    // TODO: This will overwrite your entire file with just the single new task. You need to write the entire array (body) back to the file.
     await Bun.write('tasks.json', JSON.stringify(newTask, null, 2));
 
     set.status = 201;
