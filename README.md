@@ -48,6 +48,10 @@ i completed 5 elysia rest api milestone project
     });
     ```
 
+- remember to always check your `file.json` before attempting to push. the `body` variable or where you store the parsed file, will return whatever is in the json file.
+- meaning, if the file contains something other than an array which your handler expect, it'll fail. i'll put the example in the [takeaways](#key-takeaways)
+- which mean, if you're not using pushing an object, you should definitely simplify the schema.
+
 ## next project
 
 - next project i'll be building a portfolio-kaomoji-api that i used on my portfolio site.
@@ -62,6 +66,38 @@ nothing worth mentioning here.
 
 - all the takeaways already addressed in the [realization](#realization)
 - i'll say mor if i have something to say obviously.
+- what i did wrong in `body.push`:
+  - ```typescript
+    .post('/echo', () => {
+      const body = await Bun.file('tasks.json').json() // this will return whatever the hell is in your json.file
+
+      // your schema is expecting an object/array inside the body, or should i say it wants the body to look like this.
+      const newSchema = {
+        id: Date.now;
+      }
+
+      body.push(newSchema); // you'll get an error: 'body.push' is undefined)
+    })
+    ```
+
+  - ```json
+    // meaning, if your json looks like this:
+
+    {
+      "id": "1"
+    }
+
+    // and not like this:
+
+    [
+      {
+        "id": 1771515538781
+      }
+    ]
+    ```
+
+  - it'll refuse to push because it thinks the body is wrong!
+  - the more you know...
 
 ## find me
 
