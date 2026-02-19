@@ -8,23 +8,6 @@
 import { Elysia, t } from 'elysia';
 import { swagger } from '@elysiajs/swagger';
 
-// Milestone 1 schema.
-// Initialize the schema and minimum with TypeBox.
-// TODO: Fix Swagger not knowing the schema. Elysia only tells Swagger about schemas if you put them in that second "options" object (the hook).
-const UserSchema = t.Object({
-  username: t.String({ minLength: 3 }),
-  // Let's use Numeric in this case since it'll help convert literal number into string for us.
-  age: t.Numeric({ minimum: 1 }),
-});
-
-// Milestone 3 schema.
-// Since the PROJECT-SPEC only mentioned 3 validation, I'll keep it simple for now.
-const TaskSchema = t.Object({
-  id: t.Date(),
-  description: t.String({ minLength: 4 }),
-  status: t.UnionEnum(['pending', 'in-progress', 'completed']),
-});
-
 // Initialize the server
 const app = new Elysia()
   // Root route, use this to greet all
@@ -32,19 +15,35 @@ const app = new Elysia()
 
   .get('/greet', () => ({ greet: 'hello, world' }))
 
-  // Milestone 1: Is that it, really? So easy.
+  // === M1: Validation ===
+  // Is that it, really? So easy.
   // Okay, I just found out this might be wrong, let me change it.
-  // TODO: It might be wrong, fix it but double check everything
-  // TODO: You need to put the schema in the Hook (the second argument) and use { body } from the context.
-  .post('/echo', (body) => body, {})
+  // Fix the hooks and schema, M1 done!
+  .post(
+    '/echo',
+    ({ body }) => {
+      const newUser = {
+        username: body.username,
+        age: body.age,
+      };
 
-  // Milestone 2: Task Reader
+      return newUser;
+    },
+    {
+      body: t.Object({
+        username: t.String({ minLength: 3 }),
+        age: t.Number({ minimum: 1 }),
+      }),
+    }
+  )
+
+  // === M2. Read File ===
   // Wow, its easy, since its easy let me at least decorate the JSON with real Task API schema.
   // Btw for future me, if you don't understand.
   // I make the response to be a handler here which works like a function
   .get('/tasks', () => Bun.file('tasks.json').json())
 
-  // Milestone 3: Write file.
+  // === M3. Write File ===
   // Fix the /POST /tasks with hooks
   .post(
     '/tasks',
@@ -63,6 +62,7 @@ const app = new Elysia()
       // Write
       await Bun.write('tasks.json', JSON.stringify(tasks, null, 2));
 
+      // Set the status
       set.status = 201;
       return newTask;
     },
@@ -72,6 +72,30 @@ const app = new Elysia()
         id: t.Numeric(),
         description: t.String({ minLength: 4 }),
         status: t.UnionEnum(['pending', 'in-progress', 'completed']),
+      }),
+    }
+  )
+
+  // === M4. Parse Params ===
+  // TODO: Return task by its ID
+  // TODO: Read from file too.
+  .get(
+    '/tasks/:id',
+    async ({ params }) => {
+      const tasks = await Bun.file('tasks.json').json();
+
+      // You also need hooks.
+      const getTask = {
+        id: params.id,
+      };
+
+      // But how to parse only the selected ID?
+      // TODO: Parse the ID
+    },
+    {
+      // You need schema, yes
+      params: t.Object({
+        id: t.Numeric(),
       }),
     }
   )

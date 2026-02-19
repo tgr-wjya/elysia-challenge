@@ -27,6 +27,8 @@ i completed 5 elysia rest api milestone project
     ```
 
 - what the hell is hooks??
+- i'm struggling parsing by `{id}`
+- i'll ask a clarifying question tomorrow
 
 ## realization
 
@@ -51,6 +53,7 @@ i completed 5 elysia rest api milestone project
 - remember to always check your `file.json` before attempting to push. the `body` variable or where you store the parsed file, will return whatever is in the json file.
 - meaning, if the file contains something other than an array which your handler expect, it'll fail. i'll put the example in the [takeaways](#key-takeaways)
 - which mean, if you're not using pushing an object, you should definitely simplify the schema.
+- i finally understand hooks and schema... now it all tied together beautifully. let me explain it later
 
 ## next project
 
@@ -98,6 +101,34 @@ nothing worth mentioning here.
 
   - it'll refuse to push because it thinks the body is wrong!
   - the more you know...
+
+- keys to understanding hooks and schema. let's say you have an endpoint with this details:
+  - `/POST /user` Validate and return input.
+  - fields:
+    - `username`: string (min length 3)
+    - `age`: number (min length 1)
+  - you can define the schema in the hooks which swagger will then pick up.
+  - ```typescript
+    const app = new Elysia().post(
+      '/user',
+      ({ body }) => {
+        const newUser = {
+          username: body.username,
+          age: body.age,
+        };
+
+        // return the request back to the sender
+        return newtask;
+      },
+      {
+        // swagger will pick up the schema, so you could easily test the endpoint saving your sanity!
+        body: t.Object({
+          username: t.String({ minLength: 1 }),
+          age: t.Number({ minimum: 1 }),
+        }),
+      }
+    );
+    ```
 
 ## find me
 
