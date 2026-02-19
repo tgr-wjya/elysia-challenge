@@ -4,14 +4,16 @@ i completed 5 elysia rest api milestone project
 
 ## date
 
-- day 5
-- 18 - 19 february 2026
+- day 7
+- 18 - 20 february 2026
 - week 1
 
 ## time spent
 
-- session 1: 1 hours 25 mins
-- session 2: 12 mins
+- first session: 1 hours 25 mins
+- second session: 3 hrs 36 mins
+- third session: 17 mins
+- total: **5 hours and 18 minutes**
 
 ## struggle
 
@@ -136,6 +138,6 @@ nothing worth mentioning here.
 
 ---
 
-18 - 19 february 2026
+18 - 20 february 2026
 
 made with ◉‿◉
