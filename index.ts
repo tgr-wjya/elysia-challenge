@@ -5,8 +5,14 @@
  */
 
 // Import Elysia, t for TypeScript Interface and Swagger OpenAPI
-import { Elysia, t } from 'elysia';
+import { Elysia, status, t } from 'elysia';
 import { swagger } from '@elysiajs/swagger';
+import {
+  bundlerModuleNameResolver,
+  isTemplateExpression,
+  type NumericLiteral,
+} from 'typescript';
+import { file } from 'bun';
 
 // Initialize the server
 const app = new Elysia()
@@ -77,8 +83,7 @@ const app = new Elysia()
   )
 
   // === M4. Parse Params ===
-  // TODO: Return task by its ID
-  // TODO: Read from file too.
+  // Read from file > Parse by ID > Return
   .get(
     '/tasks/:id',
     async ({ params }) => {
@@ -89,11 +94,70 @@ const app = new Elysia()
         id: params.id,
       };
 
-      // But how to parse only the selected ID?
-      // TODO: Parse the ID
+      // I've fixed parsed by ID, let me write down what I learned.
+      const getTaskById = tasks.find((t: any) => t.id === getTask.id);
+
+      // Return the request.
+      // I've checked and make sure it only fetch and send by the specific id and not the whole thing.
+      return getTaskById;
     },
     {
       // You need schema, yes
+      params: t.Object({
+        id: t.Numeric(),
+      }),
+    }
+  )
+
+  // === M5. CRUD ===
+  // TODO: Add /PATCH to update status or description
+  // TODO: Add /REMOVE to delete a task.
+  // This should be easy, I have everything I need.
+  .patch(
+    '/tasks/:id',
+    async ({ params }) => {
+      const tasks: any[] = await Bun.file('tasks.json').json();
+
+      // Define the schema
+      const patchTask = {
+        id: params.id,
+        description: params.description,
+        status: params.status,
+      };
+
+      // Parse the ID before committing to write
+      const getTaskById = tasks.find((t) => t.id === patchTask.id);
+
+      tasks.push();
+    },
+    {
+      params: t.Object({
+        id: t.Numeric(),
+        description: t.String({ minLength: 4 }),
+        status: t.UnionEnum(['pending', 'in-progress', 'completed']),
+      }),
+    }
+  )
+
+  // TODO: Fix the BUG!
+  .delete(
+    '/tasks/:id',
+    async ({ params }) => {
+      const tasks = await Bun.file(
+        new URL('tasks.json', import.meta.url)
+      ).json();
+
+      const getTask = {
+        id: params.id,
+      };
+
+      const deleteTask = tasks.filter(
+        (t: any) => Number(t.id) !== Number(getTask.id)
+      );
+
+      await Bun.write('tasks.json', JSON.stringify(deleteTask, null, 2));
+    },
+    {
       params: t.Object({
         id: t.Numeric(),
       }),
@@ -104,4 +168,4 @@ const app = new Elysia()
   .use(swagger())
   .listen(3000);
 
-console.log('Elysis is running...');
+console.log('Elysia is running...');

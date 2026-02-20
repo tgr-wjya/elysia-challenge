@@ -4,16 +4,17 @@ i completed 5 elysia rest api milestone project
 
 ## date
 
-- day 7
+- day 8
 - 18 - 20 february 2026
-- week 1
+- week 2
 
 ## time spent
 
 - first session: 1 hours 25 mins
 - second session: 3 hrs 36 mins
 - third session: 17 mins
-- total: **5 hours and 18 minutes**
+- fourth session: 2 hrs 32 mins
+- total: **7 hours and 50 minutes**
 
 ## struggle
 
@@ -31,6 +32,7 @@ i completed 5 elysia rest api milestone project
 - what the hell is hooks??
 - i'm struggling parsing by `{id}`
 - i'll ask a clarifying question tomorrow
+- i struggled with `/PATCH`, i think its just bugged. i don't fucking know what happened, i asked plenty of llm diagnosis but none of it were really from my fault so i guess there's something wrong that isn't caused by me, that's the first.
 
 ## realization
 
@@ -56,6 +58,8 @@ i completed 5 elysia rest api milestone project
 - meaning, if the file contains something other than an array which your handler expect, it'll fail. i'll put the example in the [takeaways](#key-takeaways)
 - which mean, if you're not using pushing an object, you should definitely simplify the schema.
 - i finally understand hooks and schema... now it all tied together beautifully. let me explain it later
+- turns out, parsing by id is really easy. you just define the schema you use as the id.
+- then use `.find` or `.map` to find the specific identifier in the `file.json`
 
 ## next project
 
@@ -132,12 +136,40 @@ nothing worth mentioning here.
     );
     ```
 
+- when you want to fetch a params with an identifier from file, make sure to implicitly tell what `.find` should expect.
+- typescript doesn't know what shape your array contain so it'll throw an error, you should clarify what to expect when something like this happen:
+  - ```typescript
+    // this'll resolve the error
+    const tasks: any[] = await Bun.file('tasks.json').json();
+
+    const getTask = {
+      id: params.id,
+    };
+
+    // or, you can directly resolve it on `.find`
+    const getTaskByID = task.getTask((t: Any) => t.id === getTask.id);
+    ```
+
+- don't forget that `t` here is an iteration variable, you can name it whatever you want.
+- apparently, you don't need `push` when deleting from an endpoint, you just need to overwrite it.
+  - ```typescript
+    const guestList = await Bun.file('guests.json').json();
+
+    // 1. Create a version of the data without the unwanted guest
+    const updatedList = guestList.filter((guest) => guest.name !== 'Bob');
+
+    // 2. Overwrite the entire file with the new, Bob-less array
+    await Bun.write('guests.json', JSON.stringify(updatedList));
+    ```
+
+-
+
 ## find me
 
 [portfolio](https://tgr-wjya.github.io) · [linkedin](https://linkedin.com/in/tegar-wijaya-kusuma-591a881b9) · [email](mailto:tgr.wjya.queue.top126@pm.me)
 
 ---
 
-18 - 20 february 2026
+18 - 21 february 2026
 
 made with ◉‿◉
