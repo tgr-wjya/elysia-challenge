@@ -162,7 +162,9 @@ nothing worth mentioning here.
     await Bun.write('guests.json', JSON.stringify(updatedList));
     ```
 
--
+- oh my fucking god... i accidentally nested the `json` making the /DELETE endpoint unable to delete it... my life is a mistake.
+- ALWAYS PUT A **CAUTION** OR A **REMINDER** FOR YOURSELF!
+- i spent 3 hours thinking that bun or elysia might be broken when in reality my `tasks.json` just double nested and i didn't realize it. next time, i'll put a reminder for my dumb-self. this is a mistake...
 
 ## find me
 

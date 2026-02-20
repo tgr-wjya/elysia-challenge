@@ -155,7 +155,11 @@ const app = new Elysia()
         (t: any) => Number(t.id) !== Number(getTask.id)
       );
 
+      // CAUTION: MAKE SURE IT'S NOT DOUBLE NESTED, I JUST FUCKING SPENT 3 HOURS BECAUSE I DIDN'T REALIZE IT WAS DOUBLE NESTED.
+
       await Bun.write('tasks.json', JSON.stringify(deleteTask, null, 2));
+
+      return deleteTask;
     },
     {
       params: t.Object({
