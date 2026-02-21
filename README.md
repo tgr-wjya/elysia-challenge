@@ -1,11 +1,11 @@
 # elysia rest api mastery
 
-i completed 5 elysia rest api milestone project
+trying to complete elysia mastery challenge. the challenge consist of **restful api** and **hooks**.
 
 ## date
 
-- day 8
-- 18 - 20 february 2026
+- day 9
+- 18 - 22 february 2026
 - week 2
 
 ## time spent
@@ -14,7 +14,8 @@ i completed 5 elysia rest api milestone project
 - second session: 3 hrs 36 mins
 - third session: 17 mins
 - fourth session: 2 hrs 32 mins
-- total: **7 hours and 50 minutes**
+- fifth session: 2 hrs 2 mins
+- total: **9 hours and 52 minutes**
 
 ## struggle
 
@@ -33,6 +34,10 @@ i completed 5 elysia rest api milestone project
 - i'm struggling parsing by `{id}`
 - i'll ask a clarifying question tomorrow
 - i struggled with `/PATCH`, i think its just bugged. i don't fucking know what happened, i asked plenty of llm diagnosis but none of it were really from my fault so i guess there's something wrong that isn't caused by me, that's the first.
+- forgot that you could define a schema as optional in swagger
+- i really am struggling with the naming convention, its definitely not following best practice but hey if it works it works.
+- almost forgot that you could use double hooks.
+- i don't get how this `...body` works.
 
 ## realization
 
@@ -165,6 +170,112 @@ nothing worth mentioning here.
 - oh my fucking god... i accidentally nested the `json` making the /DELETE endpoint unable to delete it... my life is a mistake.
 - ALWAYS PUT A **CAUTION** OR A **REMINDER** FOR YOURSELF!
 - i spent 3 hours thinking that bun or elysia might be broken when in reality my `tasks.json` just double nested and i didn't realize it. next time, i'll put a reminder for my dumb-self. this is a mistake...
+- you use double hooks for `/PATCH`, shall i tell you how?
+  - ```typescript
+    .patch('/tasks/:id', async ({params, body, set}) => {
+      const tasks = await Bun.file('tasks.json').json();
+
+      const schemaID = {
+        id: params.id,
+      }
+
+      const updateTask = {
+        description: body.description,
+        status: body.status,
+      }
+
+      // Your logic goes here...
+    }, {
+      params: t.Object({
+        id: t.Numeric(),
+      }),
+      body: t.Partial(
+        t.Object({
+          description: t.String({ minLength: 4 }),
+          status: t.UnionEnum(['pending', 'in-progress', 'completed']),
+        })
+      ),
+    }
+    ```
+
+- one thing to remember that swagger doesn't realize when your schema is optional
+- so you need to remember deleting the unused schema to avoid error, for example:
+  - ```json
+    {
+      "description": "",
+      "status": "pending"
+    }
+    ```
+  - that will throw an error even though let's say you've already defined them to be optional.
+  - if you leave `"status": ""` or `"description": "",` in there, the validator sees a value that doesn't match your Enum, and it rejects the whole request.
+  - even if its technically valid, so you need to be wary.
+- both `/PATCH` and `/DELETE` has a different prefered method.
+  - apparently, in modern javascript/typescript. it’s often cleaner to "filter out" what you don't want rather than finding a position and "splicing" it out.
+  - that's precisely why you're using `.filter()` and `!==` for `/DELETE`
+  - for `/DELETE`
+    - `.filter()` goes through every single item in the array and asks a `True/False` question: "should this item stay in the new list?"
+    - `!==` (not equal to):
+      - if true (it's a different id), the item stays.
+      - if false (it's the id you want to delete), the item is dropped.
+    - explanation from gemini: "For DELETE: It’s actually faster and less messy to just "re-deal" the deck without the unwanted card than it is to try and pull a card out of the middle and shove the rest of the cards together to fill the gap."
+  - for `/PATCH`
+    - think of your `tasks.json` as a row of lockers.
+      - you want to change the sticker on locker #5.
+      - you walk down the hallway counting until you hit the 5th locker.
+      - you use your key to make sure you are at the exact right door.
+      - you open just that one door, swap the sticker, and leave. everything else stays exactly where it was.
+    - when you update a task, you need to know exactly which slot in the "cabinet" (the array) it sits in so you can swap out the old data for the new data.
+    - `===` strict equality is to match the exact right door.
+- let me try to explain spread in a way that make sense for me, here we go.
+- explanation from gemini: _When you use ... inside an object, you are telling the code: "Take everything inside this box, dump it out right here, and if anything has the same label, let the new stuff overwrite the old stuff."_
+- step by step explanation:
+  - ```typescript
+    tasks[findID] = {
+        ...tasks[findID],
+        ...body,
+      };
+
+    // before the spread:
+    tasks[findID] = {
+      id: 123,
+      description: 'Old description',
+      status: 'pending',
+    };
+
+    // ...tasks[findID] copies everything:
+    {
+      id: 123,
+      description: "Old description",
+      status: "pending"
+    }
+
+    // Then ...body overwrites only what you sent:
+    {
+      description: "Test 3"
+    }
+    ```
+
+  - without the `...`, you would have to manually map every single field like a robot.
+  - with `...body`, you don't care if the user sent 1 field or 100 fields. it'll takes whatever is in that "box" and merges it into the task.
+  - **spreading the old task first ensures you keep fields like id and anything else that shouldn't change. then the
+    new body data overwrites only what you're updating.**
+  - by doing `...tasks[findID], ...body`:
+    - ```typescript
+      tasks[findID] = {
+        ...tasks[findID], // Start with **ALL** the old data included
+        ...body, // Then overwrite **ONLY** what came in
+      };
+
+      // You get:
+      {
+        id: 123,
+        description: "New text", // Updated from body
+        status: "pending" // Kept from old task so it doesn't get deleted
+      }
+      ```
+
+  - the whole point of `/PATCH` - update some fields, keep the rest. Without copying the old task first, you'd destroy
+    data.
 
 ## find me
 
@@ -172,6 +283,6 @@ nothing worth mentioning here.
 
 ---
 
-18 - 21 february 2026
+18 - 22 february 2026
 
 made with ◉‿◉

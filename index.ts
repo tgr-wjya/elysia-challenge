@@ -109,40 +109,54 @@ const app = new Elysia()
     }
   )
 
-  // === M5. CRUD ===
+  // === M5. UPDATE ===
   // TODO: Add /PATCH to update status or description
-  // TODO: Add /REMOVE to delete a task.
+  // Added /DELETE for /tasks
   // This should be easy, I have everything I need.
+  // Oh my god, I just realized you need two hooks for /PATCH
+  // Let me implement it.
   .patch(
     '/tasks/:id',
-    async ({ params }) => {
-      const tasks: any[] = await Bun.file('tasks.json').json();
+    async ({ params, set, body }) => {
+      const tasks = await Bun.file('tasks.json').json();
 
-      // Define the schema
-      const patchTask = {
+      const getId = {
         id: params.id,
-        description: params.description,
-        status: params.status,
       };
 
-      // Parse the ID before committing to write
-      const getTaskById = tasks.find((t) => t.id === patchTask.id);
+      const findID = tasks.findIndex((t: any) => t.id === getId.id);
 
-      tasks.push();
+      if (findID === -1) {
+        set.status = 404;
+        return { error: 'Task not found' };
+      }
+
+      tasks[findID] = {
+        ...tasks[findID],
+        ...body,
+      };
+
+      await Bun.write('tasks.json', JSON.stringify(tasks, null, 2));
+
+      return tasks[findID];
     },
     {
       params: t.Object({
         id: t.Numeric(),
-        description: t.String({ minLength: 4 }),
-        status: t.UnionEnum(['pending', 'in-progress', 'completed']),
       }),
+      body: t.Partial(
+        t.Object({
+          description: t.String({ minLength: 4 }),
+          status: t.UnionEnum(['pending', 'in-progress', 'completed']),
+        })
+      ),
     }
   )
 
-  // TODO: Fix the BUG!
+  // === M5. DELETE ===
   .delete(
     '/tasks/:id',
-    async ({ params }) => {
+    async ({ params, set }) => {
       const tasks = await Bun.file(
         new URL('tasks.json', import.meta.url)
       ).json();
@@ -159,6 +173,7 @@ const app = new Elysia()
 
       await Bun.write('tasks.json', JSON.stringify(deleteTask, null, 2));
 
+      set.status = 200;
       return deleteTask;
     },
     {
