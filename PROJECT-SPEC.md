@@ -95,6 +95,132 @@ Instead of a single "Mega API," you will master Elysia.js through 5 incremental 
 
 ---
 
+## BONUS MILESTONE: THE SAFETY NET (Clean Code + Testing)
+
+**Goal:** Fix bad habits while the codebase is small, then lock in correctness with tests.
+
+### Part 1: Code Quality (Do This First)
+
+**Why This Matters:** Bad naming becomes muscle memory. Fix it now before it carries over to your kaomoji API and future projects.
+
+#### Fix These Variable Names:
+- Line 31: `newUser` → `echoData` (it's not a user, it's echo data)
+- Line 93-94: `getTask` → delete it, use `params.id` directly
+- Line 123-125: `getId` → delete it, use `params.id` directly
+- Line 127: `findID` → `taskIndex` (more descriptive)
+- Line 168: `deleteTask` → `remainingTasks` (it's what's LEFT after deletion)
+
+#### Add Type Safety (Remove `any`):
+```typescript
+// Add at the top of index.ts, after imports:
+type Task = {
+  id: number;
+  description: string;
+  status: 'pending' | 'in-progress' | 'completed';
+};
+
+// Then replace all `(t: any)` with `(t: Task)` on lines 98, 127, 169:
+const task = tasks.find((t: Task) => t.id === params.id);
+const taskIndex = tasks.findIndex((t: Task) => t.id === params.id);
+const remainingTasks = tasks.filter((t: Task) => t.id !== params.id);
+```
+
+#### Success Criteria:
+- ✅ No variables named after what they do (get/find), only what they ARE.
+- ✅ No `any` types anywhere in the code.
+- ✅ Task type defined and used consistently.
+
+---
+
+### Part 2: Testing (Do This After Code Cleanup)
+
+**Why This Matters:** Remember the double-nested JSON incident? A single test would have caught it instantly. Tests aren't about "not trusting yourself" - they're about making future changes confidently without manually testing 5 endpoints every time.
+
+### API Requirements
+Write tests for your existing CRUD endpoints (Milestones 1-5):
+- `POST /echo` - Validation tests
+- `GET /tasks` - File reading tests
+- `POST /tasks` - File writing tests
+- `GET /tasks/:id` - Params parsing tests
+- `PATCH /tasks/:id` - Partial update tests
+- `DELETE /tasks/:id` - Array structure tests
+
+### Technical Requirements
+- **Framework:** Bun Test (built-in, no extra dependencies)
+- **Test File:** `index.test.ts`
+- **Pattern:** Arrange → Act → Assert
+- **Coverage:** Happy path + edge cases (404s, validation errors, optional fields)
+
+### Key Tests to Write
+
+**1. The Double-Nesting Killer:**
+```typescript
+test('DELETE /tasks/:id returns flat array', async () => {
+  const response = await app.handle(
+    new Request('http://localhost/tasks/123', { method: 'DELETE' })
+  );
+  const data = await response.json();
+  expect(data[0].id).toBeDefined(); // Would fail if double-nested
+});
+```
+
+**2. PATCH Optional Fields:**
+```typescript
+test('PATCH /tasks/:id works with only description', async () => {
+  const response = await app.handle(
+    new Request('http://localhost/tasks/1', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: 'Updated only this' })
+    })
+  );
+  expect(response.status).toBe(200);
+  const task = await response.json();
+  expect(task.description).toBe('Updated only this');
+  expect(task.status).toBeDefined(); // Original status preserved
+});
+```
+
+**3. Validation Errors:**
+```typescript
+test('POST /echo rejects username shorter than 3 chars', async () => {
+  const response = await app.handle(
+    new Request('http://localhost/echo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'ab', age: 25 })
+    })
+  );
+  expect(response.status).toBe(400);
+});
+```
+
+### Success Criteria
+- ✅ Run `bun test` and all tests pass.
+- ✅ Each CRUD endpoint has at least 2 tests (happy path + error case).
+- ✅ PATCH tests verify optional fields work independently.
+- ✅ DELETE test ensures no double-nesting.
+- ✅ You can refactor code confidently knowing tests will catch breaks.
+
+### Running Tests
+```bash
+# Run all tests
+bun test
+
+# Run in watch mode (re-run on file changes)
+bun test --watch
+
+# Run specific test file
+bun test index.test.ts
+```
+
+### When to Write Tests
+- **After** building each milestone (lock in what works)
+- **Before** refactoring (safety net for changes)
+- **When** you spend more than 10 minutes debugging (turn the bug into a test)
+
+---
+
 ## MILESTONE 6: THE GATEKEEPER (beforeHandle Hook)
 
 **Goal:** Master request preprocessing and rate limiting with lifecycle hooks.

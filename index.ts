@@ -25,6 +25,7 @@ const app = new Elysia()
   // Is that it, really? So easy.
   // Okay, I just found out this might be wrong, let me change it.
   // Fix the hooks and schema, M1 done!
+  // TODO: Fix naming
   .post(
     '/echo',
     ({ body }) => {
@@ -90,6 +91,7 @@ const app = new Elysia()
       const tasks = await Bun.file('tasks.json').json();
 
       // You also need hooks.
+      // TODO: Redundant schemas
       const getTask = {
         id: params.id,
       };
@@ -110,7 +112,7 @@ const app = new Elysia()
   )
 
   // === M5. UPDATE ===
-  // TODO: Add /PATCH to update status or description
+  // Added /PATCH for /Tasks
   // Added /DELETE for /tasks
   // This should be easy, I have everything I need.
   // Oh my god, I just realized you need two hooks for /PATCH
@@ -120,6 +122,7 @@ const app = new Elysia()
     async ({ params, set, body }) => {
       const tasks = await Bun.file('tasks.json').json();
 
+      // TODO: Remove redundant schema
       const getId = {
         id: params.id,
       };
@@ -161,6 +164,7 @@ const app = new Elysia()
         new URL('tasks.json', import.meta.url)
       ).json();
 
+      // TODO: Remove redundant schema
       const getTask = {
         id: params.id,
       };

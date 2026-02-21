@@ -277,6 +277,24 @@ nothing worth mentioning here.
   - the whole point of `/PATCH` - update some fields, keep the rest. Without copying the old task first, you'd destroy
     data.
 
+- why you're only using `.push()` for `/POST` and not `/DELETE` and `/PATCH`
+  - `.push()` only works for adding new items to an array. For `/PATCH` and `/DELETE`, you're changing what's
+    already there or removing it.
+- reminder that **you can reference hooks directly without needing a schema**. for example:
+  - ```typescript
+    .get('tasks/:id', async ({ params }) => {
+      const tasks = await Bun.file('tasks.json').json();
+
+      const getTaskByID = tasks.find((t: any) => t.id === params.id)
+
+      return getTaskByID;
+    }, {
+      params: t.Object({
+        id: t.Numeric(),
+      })
+    })
+    ```
+
 ## find me
 
 [portfolio](https://tgr-wjya.github.io) · [linkedin](https://linkedin.com/in/tegar-wijaya-kusuma-591a881b9) · [email](mailto:tgr.wjya.queue.top126@pm.me)
