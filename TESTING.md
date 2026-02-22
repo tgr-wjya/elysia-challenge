@@ -413,6 +413,34 @@ spyOn(Bun, 'file').mockReturnValue({
 
 ---
 
+## all matchers reference
+
+**identity checks:**
+- `.toBe(value)` - exact match for primitives (string, number, boolean, null)
+- `.toEqual(value)` - deep value comparison for objects and arrays
+
+**existence checks:**
+- `.toBeDefined()` - property exists
+- `.toBeUndefined()` - property doesn't exist
+
+**comparison checks:**
+- `.toBeGreaterThan(value)` - number is greater
+- `.toBeLessThan(value)` - number is less
+- `.toBeGreaterThanOrEqual(value)` - number is >=
+- `.toBeLessThanOrEqual(value)` - number is <=
+
+**mock/spy checks:**
+- `.toHaveBeenCalled()` - spy/mock was called at least once
+- `.toHaveBeenCalledWith(args)` - spy/mock was called with specific arguments
+- `.toHaveBeenCalledTimes(n)` - spy/mock was called exactly n times
+
+**type/content checks:**
+- `.toContain(value)` - array contains value, or string contains substring
+- `.toThrow()` - function throws an error
+- `.toThrow(ErrorType)` - function throws specific error
+
+---
+
 ## your turn
 
 look at your `index.test.ts` line 14-16. that's broken. it's mixing two patterns wrong.
