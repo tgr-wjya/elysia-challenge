@@ -1,11 +1,11 @@
 # elysia rest api mastery
 
-trying to complete elysia mastery challenge. the challenge consist of **restful api** and **hooks**.
+trying to complete elysia mastery challenge. the challenge consist of **restful api**, **type-safety**, **test runner** and **hooks**.
 
 ## date
 
-- day 9
-- 18 - 22 february 2026
+- day 10
+- 18 - 23 february 2026
 - week 2
 
 ## time spent
@@ -14,8 +14,9 @@ trying to complete elysia mastery challenge. the challenge consist of **restful 
 - second session: 3 hrs 36 mins
 - third session: 17 mins
 - fourth session: 2 hrs 32 mins
-- fifth session: 2 hrs 2 mins
-- total: **9 hours and 52 minutes**
+- fifth session: 3 hrs 34 mins
+- sixth session: 1 hr 19 mins
+- total: **12 hours and 43 minutes**
 
 ## struggle
 
@@ -342,6 +343,6 @@ nothing worth mentioning here.
 
 ---
 
-18 - 22 february 2026
+18 - 23 february 2026
 
 made with ◉‿◉
