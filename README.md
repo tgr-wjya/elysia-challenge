@@ -38,6 +38,7 @@ trying to complete elysia mastery challenge. the challenge consist of **restful 
 - i really am struggling with the naming convention, its definitely not following best practice but hey if it works it works.
 - almost forgot that you could use double hooks.
 - i don't get how this `...body` works.
+- struggling with test runner
 
 ## realization
 
@@ -65,6 +66,7 @@ trying to complete elysia mastery challenge. the challenge consist of **restful 
 - i finally understand hooks and schema... now it all tied together beautifully. let me explain it later
 - turns out, parsing by id is really easy. you just define the schema you use as the id.
 - then use `.find` or `.map` to find the specific identifier in the `file.json`
+- test runner is actually easy as fuck, you're just validating what you've built and to avoid those incident..
 
 ## next project
 
@@ -294,6 +296,45 @@ nothing worth mentioning here.
       })
     })
     ```
+
+-you use `type` for runtime validation when typescript complains about the shape of the object you're passing. for example:
+
+- ```typescript
+  // bad practice - reading from a file, typescript couldn't help you complain about stuff that doesn't exist.
+  const tasks: any[] = await Bun.file('tasks.json').json();
+
+  // good practice - typescript could help you catch the mistake while typing, it's a runtime validator
+  type Task = {
+    id: number;
+    description: string;
+    status: 'pending' | 'in-progress' | 'completed';
+  };
+
+  const tasks: Task[] = await Bun.file('tasks.json').json();
+
+  // OR
+
+  const getTaskByID = tasks.find((t: Task) => t.id === params.id);
+  ```
+
+- i haven't learn enough test runner to say something, maybe tomorrow i'll learn something useful.
+- oh btw, the difference of `.toBe()` and `.toEqual()`:
+  - with `.toBe()` you're asking if two things are the exact same physical object.
+  - "are these two keys for the same lock?" even if they look identical, if they were cut from different pieces of metal, the answer is certainly "no."
+  - ```typescript
+    // that's why this'll fail, even if the response exactly the same as you written
+    const greeting = await response.json();
+    expect(greeting).toBe({ greet: 'hello, world' });
+    );
+
+    // and this don't
+    const greeting = await response.json();
+    expect(greeting).toEqual({ greet: 'hello, world' })
+    ```
+
+  - you use `.toEqual()` to checks if the values are the same
+
+- claude code recommends [drizzle orm](https://orm.drizzle.team/) for me to learn next, i'll check that out and consider it.
 
 ## find me
 

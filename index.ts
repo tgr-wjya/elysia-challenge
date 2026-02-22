@@ -1,21 +1,22 @@
 /** Mastering REST API with Elysia + Bun
  *
  * @author Tegar Wijaya Kusuma
- * @date 18 February 2026
+ * @date 18 - 23 February 2026
  */
 
 // Import Elysia, t for TypeScript Interface and Swagger OpenAPI
 import { Elysia, status, t } from 'elysia';
 import { swagger } from '@elysiajs/swagger';
-import {
-  bundlerModuleNameResolver,
-  isTemplateExpression,
-  type NumericLiteral,
-} from 'typescript';
-import { file } from 'bun';
+
+// TODO: Add type safety for Task
+type Task = {
+  id: number;
+  description: string;
+  status: 'pending' | 'in-progress' | 'completed';
+};
 
 // Initialize the server
-const app = new Elysia()
+export const app = new Elysia()
   // Root route, use this to greet all
   .all('/', () => 'made with ◉‿◉')
 
@@ -25,16 +26,16 @@ const app = new Elysia()
   // Is that it, really? So easy.
   // Okay, I just found out this might be wrong, let me change it.
   // Fix the hooks and schema, M1 done!
-  // TODO: Fix naming
+  // Fix the naming.
   .post(
     '/echo',
     ({ body }) => {
-      const newUser = {
+      const echoData = {
         username: body.username,
         age: body.age,
       };
 
-      return newUser;
+      return echoData;
     },
     {
       body: t.Object({
@@ -90,14 +91,9 @@ const app = new Elysia()
     async ({ params }) => {
       const tasks = await Bun.file('tasks.json').json();
 
-      // You also need hooks.
-      // TODO: Redundant schemas
-      const getTask = {
-        id: params.id,
-      };
-
+      // Fixed the redundant schema
       // I've fixed parsed by ID, let me write down what I learned.
-      const getTaskById = tasks.find((t: any) => t.id === getTask.id);
+      const getTaskById = tasks.find((t: Task) => t.id === params.id);
 
       // Return the request.
       // I've checked and make sure it only fetch and send by the specific id and not the whole thing.
@@ -122,26 +118,23 @@ const app = new Elysia()
     async ({ params, set, body }) => {
       const tasks = await Bun.file('tasks.json').json();
 
-      // TODO: Remove redundant schema
-      const getId = {
-        id: params.id,
-      };
+      // Redundant schema removed
 
-      const findID = tasks.findIndex((t: any) => t.id === getId.id);
+      const taskIndex = tasks.findIndex((t: Task) => t.id === params.id);
 
-      if (findID === -1) {
+      if (taskIndex === -1) {
         set.status = 404;
         return { error: 'Task not found' };
       }
 
-      tasks[findID] = {
-        ...tasks[findID],
+      tasks[taskIndex] = {
+        ...tasks[taskIndex],
         ...body,
       };
 
       await Bun.write('tasks.json', JSON.stringify(tasks, null, 2));
 
-      return tasks[findID];
+      return tasks[taskIndex];
     },
     {
       params: t.Object({
@@ -169,16 +162,16 @@ const app = new Elysia()
         id: params.id,
       };
 
-      const deleteTask = tasks.filter(
-        (t: any) => Number(t.id) !== Number(getTask.id)
+      const remainingTask = tasks.filter(
+        (t: Task) => Number(t.id) !== Number(getTask.id)
       );
 
       // CAUTION: MAKE SURE IT'S NOT DOUBLE NESTED, I JUST FUCKING SPENT 3 HOURS BECAUSE I DIDN'T REALIZE IT WAS DOUBLE NESTED.
 
-      await Bun.write('tasks.json', JSON.stringify(deleteTask, null, 2));
+      await Bun.write('tasks.json', JSON.stringify(remainingTask, null, 2));
 
       set.status = 200;
-      return deleteTask;
+      return remainingTask;
     },
     {
       params: t.Object({
