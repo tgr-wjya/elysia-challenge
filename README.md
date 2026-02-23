@@ -1,11 +1,11 @@
 # elysia rest api mastery
 
-trying to complete elysia mastery challenge. the challenge consist of **restful api**, **type-safety**, **test runner** and **hooks**.
+trying to complete elysia mastery challenge. the challenge consist of **rest api**, **type-safety**, **test runner** and **hooks**.
 
 ## date
 
-- day 10
-- 18 - 23 february 2026
+- day 11
+- 18 - 24 february 2026
 - week 2
 
 ## time spent
@@ -15,8 +15,9 @@ trying to complete elysia mastery challenge. the challenge consist of **restful 
 - third session: 17 mins
 - fourth session: 2 hrs 32 mins
 - fifth session: 3 hrs 34 mins
-- sixth session: 1 hr 19 mins
-- total: **12 hours and 43 minutes**
+- sixth session: 3 hrs 56 mins
+- seventh session: 1 hr 55 mins
+- total: **17 hours and 15 minutes**
 
 ## struggle
 
@@ -40,6 +41,7 @@ trying to complete elysia mastery challenge. the challenge consist of **restful 
 - almost forgot that you could use double hooks.
 - i don't get how this `...body` works.
 - struggling with test runner
+- struggling at making bun test type-safety.
 
 ## realization
 
@@ -336,6 +338,35 @@ nothing worth mentioning here.
   - you use `.toEqual()` to checks if the values are the same
 
 - claude code recommends [drizzle orm](https://orm.drizzle.team/) for me to learn next, i'll check that out and consider it.
+- when writing a test runner, you should definitely use `describe` and `it` rather than `test` alone.
+  - `it` is technically an alias for `test`
+  - `describe` groups related tests together. an example:
+    - ```typescript
+      const BASE_URL = 'http://localhost:3000';
+
+      describe('Test responsiveness', () => {
+        describe('GET /echo', () => {
+          it('Should echo user body validation', async () => {
+            const response = await app.handle(new Request(`${BASE_URL}/echo`));
+
+            const greeting = await response.text();
+            expect(greeting).toEqual({ greet: 'hello, world' });
+          });
+        });
+      });
+      ```
+
+- i almost forgot, yes you should `const` your url. you can just do this:
+  - ```typescript
+    const BASE_URL = 'http://example.com';
+
+    new Request(`${BASE_URL}/greet`);
+    new Request(`${BASE_URL}/tasks`);
+    new Request(`${BASE_URL}/tasks/${id}`);
+    ```
+
+- you should double check your test runner because its untrustworthy. you could write an incomplete test runner and it'll pass, so make sure to eye-it.
+- if only there's a type-safety for test runner...
 
 ## find me
 
@@ -343,6 +374,6 @@ nothing worth mentioning here.
 
 ---
 
-18 - 23 february 2026
+18 - 24 february 2026
 
 made with ◉‿◉

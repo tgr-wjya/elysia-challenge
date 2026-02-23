@@ -1,7 +1,7 @@
 /** Mastering REST API with Elysia + Bun
  *
  * @author Tegar Wijaya Kusuma
- * @date 18 - 23 February 2026
+ * @date 18 - 24 February 2026
  */
 
 // Import Elysia, t for TypeScript Interface and Swagger OpenAPI
@@ -29,12 +29,13 @@ export const app = new Elysia()
   // Fix the naming.
   .post(
     '/echo',
-    ({ body }) => {
+    ({ body, set }) => {
       const echoData = {
         username: body.username,
         age: body.age,
       };
 
+      set.status = 200;
       return echoData;
     },
     {
@@ -55,7 +56,7 @@ export const app = new Elysia()
   // Fix the /POST /tasks with hooks
   .post(
     '/tasks',
-    async ({ body, set, status }) => {
+    async ({ body, set }) => {
       const tasks = await Bun.file('tasks.json').json();
 
       const newTask = {
@@ -183,5 +184,7 @@ export const app = new Elysia()
   // Swagger OpenAPI and port
   .use(swagger())
   .listen(3000);
+
+export type App = typeof app;
 
 console.log('Elysia is running...');
