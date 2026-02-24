@@ -5,6 +5,13 @@
   "private": true,
   "devDependencies": {
     "@types/bun": "latest",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
+    "eslint": "^10.0.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-security": "^4.0.0",
+    "eslint-plugin-sonarjs": "^4.0.0",
+    "husky": "^9.1.7",
     "prettier": "^3.8.1"
   },
   "peerDependencies": {
@@ -16,6 +23,9 @@
     "elysia": "^1.4.25"
   },
   "scripts": {
-    "test": "bun test --reporter=spec"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prepare": "husky",
+    "test": "bun test"
   }
 }
