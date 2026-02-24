@@ -4,8 +4,8 @@ trying to complete elysia mastery challenge. the challenge consist of **rest api
 
 ## date
 
-- day 11
-- 18 - 24 february 2026
+- day 12
+- 18 - 25 february 2026
 - week 2
 
 ## time spent
@@ -16,8 +16,9 @@ trying to complete elysia mastery challenge. the challenge consist of **rest api
 - fourth session: 2 hrs 32 mins
 - fifth session: 3 hrs 34 mins
 - sixth session: 3 hrs 56 mins
-- seventh session: 1 hr 55 mins
-- total: **17 hours and 15 minutes**
+- seventh session: 4 hrs 22 mins
+- eight session: 2 hrs 38 mins
+- total: **22 hours 20 minutes**
 
 ## struggle
 
@@ -367,6 +368,37 @@ nothing worth mentioning here.
 
 - you should double check your test runner because its untrustworthy. you could write an incomplete test runner and it'll pass, so make sure to eye-it.
 - if only there's a type-safety for test runner...
+- if you want to check path status, use `response` directly. for example:
+  - ```typescript
+    const response = await app.handle(new Request(`${BASE_URL}`));
+
+    const data = await response.json();
+
+    // call response directly here.
+    expect(response.status).toBe(404);
+    expect(data).toBe('hello!');
+    ```
+
+TODO: write what i learned about spyon and mock here. 
+
+# http status code cheat sheet
+
+| code | meaning               | description                                     |
+| ---- | --------------------- | ----------------------------------------------- |
+| 200  | OK                    | request succeeded, response contains data.      |
+| 201  | Created               | resource created successfully.                  |
+| 204  | No Content            | request succeeded, no content returned.         |
+| 400  | Bad Request           | client sent invalid request.                    |
+| 401  | Unauthorized          | authentication required or failed.              |
+| 403  | Forbidden             | server refuses to authorize request.            |
+| 404  | Not Found             | resource not found.                             |
+| 405  | Method Not Allowed    | http method not supported for resource.         |
+| 409  | Conflict              | request conflicts with current state.           |
+| 500  | Internal Server Error | server encountered an unexpected error.         |
+| 502  | Bad Gateway           | invalid response from upstream server.          |
+| 503  | Service Unavailable   | server is temporarily unable to handle request. |
+
+for more codes, see [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status).
 
 ## find me
 
@@ -374,6 +406,6 @@ nothing worth mentioning here.
 
 ---
 
-18 - 24 february 2026
+18 - 25 february 2026
 
 made with ◉‿◉
