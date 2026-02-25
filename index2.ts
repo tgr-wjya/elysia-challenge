@@ -103,10 +103,7 @@ export const taskGroup = new Elysia().group('/tasks', (app) =>
     .post(
       '/',
       async ({ body, status }) => {
-        const newTask = {
-          id: Date.now,
-          description: body.description,
-          status: body.status,
+        // TODO: Add newTask schema here.
         };
       },
 
