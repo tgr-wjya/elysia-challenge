@@ -104,7 +104,6 @@ export const taskGroup = new Elysia().group('/tasks', (app) =>
       '/',
       async ({ body, status }) => {
         // TODO: Add newTask schema here.
-        };
       },
 
       {
