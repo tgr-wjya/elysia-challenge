@@ -1,5 +1,8 @@
 # elysia rest api mastery
 
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/tgr-wjya/elysia-challenge/semgrep.yml)](https://img.shields.io/github/actions/workflow/status/tgr-wjya/elysia-challenge/semgrep.yml
+)
+
 trying to complete elysia mastery challenge. the challenge consist of **rest api**, **type-safety**, **test runner** and **hooks**.
 
 ## date
