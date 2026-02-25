@@ -117,7 +117,76 @@ describe('Testing /tasks API', () => {
   });
 
   describe('POST /tasks', () => {
-    it('Should send and return POSTED task', async () => {});
-    // TODO: Continue this tomorrow.
+    it('Should send and return new task to the list', async () => {
+      spyOn(Bun, 'file').mockReturnValue({
+        // eslint-disable-next-line @typescript-eslint/require-await
+        json: async () => [{ id: 1, description: 'Test', status: 'pending' }],
+        // eslint-disable-next-line @typescript-eslint/require-await
+        exists: async () => true,
+      } as unknown as ReturnType<typeof Bun.file>);
+
+      const writeSpy = spyOn(Bun, 'write').mockResolvedValue(42);
+
+      const newTask = {
+        description: 'Sip my coffee',
+        status: 'in-progress',
+      };
+
+      const response = await app.handle(
+        new Request(`${BASE_URL}/tasks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newTask),
+        })
+      );
+
+      expect(response.status).toBe(201);
+      const taskCreated = (await response.json()) as Task;
+      expect(taskCreated.description).toBe('Sip my coffee');
+      expect(taskCreated.status).toBe('in-progress');
+      expect(writeSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('GET /tasks/:id', () => {
+    it('Should return a single task by its ID', async () => {
+      spyOn(Bun, 'file').mockReturnValue({
+        // eslint-disable-next-line @typescript-eslint/require-await
+        json: async () => [
+          {
+            id: 671289120,
+            description: 'Lingering around',
+            status: 'completed',
+          },
+        ],
+        // eslint-disable-next-line @typescript-eslint/require-await
+        exists: async () => true,
+      } as unknown as ReturnType<typeof Bun.file>);
+
+      const mockTaskId = {
+        id: 671289120,
+      };
+
+      const response = await app.handle(
+        new Request(`${BASE_URL}/tasks/${mockTaskId.id}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+
+      expect(response.status).toBe(200);
+      const taskId = await response.json();
+      expect(taskId).toEqual({
+        id: 671289120,
+        description: 'Lingering around',
+        status: 'completed',
+      });
+    });
+  });
+
+  describe('PATCH /tasks/:id', () => {
+    it('Should update task status or description', async () => {
+      // TODO: Continue this tomorrow
+    });
   });
 });

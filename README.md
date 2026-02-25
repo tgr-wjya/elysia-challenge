@@ -1,14 +1,13 @@
 # elysia rest api mastery
 
-[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/tgr-wjya/elysia-challenge/semgrep.yml)](https://img.shields.io/github/actions/workflow/status/tgr-wjya/elysia-challenge/semgrep.yml
-)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/tgr-wjya/elysia-challenge/semgrep.yml)](https://img.shields.io/github/actions/workflow/status/tgr-wjya/elysia-challenge/semgrep.yml)
 
 trying to complete elysia mastery challenge. the challenge consist of **rest api**, **type-safety**, **test runner** and **hooks**.
 
 ## date
 
-- day 12
-- 18 - 25 february 2026
+- day 13
+- 18 - 26 february 2026
 - week 2
 
 ## time spent
@@ -21,7 +20,8 @@ trying to complete elysia mastery challenge. the challenge consist of **rest api
 - sixth session: 3 hrs 56 mins
 - seventh session: 4 hrs 22 mins
 - eight session: 2 hrs 38 mins
-- total: **22 hours 20 minutes**
+- ninth session: 2 hrs
+- total: **24 hours 20 minutes**
 
 ## struggle
 
@@ -74,6 +74,17 @@ trying to complete elysia mastery challenge. the challenge consist of **rest api
 - turns out, parsing by id is really easy. you just define the schema you use as the id.
 - then use `.find` or `.map` to find the specific identifier in the `file.json`
 - test runner is actually easy as fuck, you're just validating what you've built and to avoid those incident..
+
+### Quick reference
+
+| Use case        | What to mock                 | Why?                                   |
+| --------------- | ---------------------------- | -------------------------------------- |
+| GET endpoint    | Return value                 | Control what the API returns           |
+| POST endpoint   | Initial file content, write  | Test adding new data, avoid real write |
+| PATCH endpoint  | Original file content, write | Test update logic, avoid real write    |
+| DELETE endpoint | Original file content, write | Test removal logic, avoid real write   |
+
+---
 
 ## next project
 
@@ -382,7 +393,12 @@ nothing worth mentioning here.
     expect(data).toBe('hello!');
     ```
 
-TODO: write what i learned about spyon and mock here. 
+- i didn't really learn much today, i feel like writing a test runner just mostly asking stuff which i'm conflicted whether its cheating or not, i don't get the feelings that i actually understood it like i do with rest api.
+- i'll consult this about this later.
+- writing your own test runner is a good skills, but i don't know if i really cheat it out.
+- test runner is actually easy, its just that i mostly ask for a confirmation before letting myself struggle with it first.
+- it was a simple question, how do you test this and that, in the end i'll have to piece up the test together but yeah i didn't really struggle with the implementation because i asked straight away even when i piece up the code snippet example on my own.
+- i don't know what to do, my `index2.ts` is nearing its refactor completion so let's hope that i know what to do later.
 
 # http status code cheat sheet
 
@@ -401,7 +417,7 @@ TODO: write what i learned about spyon and mock here.
 | 502  | Bad Gateway           | invalid response from upstream server.          |
 | 503  | Service Unavailable   | server is temporarily unable to handle request. |
 
-for more codes, see [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status).
+for more codes, see [mdn web docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status).
 
 ## find me
 
@@ -409,6 +425,6 @@ for more codes, see [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/
 
 ---
 
-18 - 25 february 2026
+18 - 26 february 2026
 
 made with ◉‿◉

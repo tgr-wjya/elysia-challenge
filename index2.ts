@@ -95,22 +95,94 @@ export const taskGroup = new Elysia().group('/tasks', (app) =>
       return await getTasks();
     })
 
-    // TODO: Continue this.
+    /**
+     * GET /tasks/:id
+     * Return a single task by its ID.
+     */
+    .get(
+      '/:id',
+      async ({ params, set }) => {
+        const tasks = await getTasks();
+
+        const getTaskById = tasks.find((t: Task) => t.id === params.id);
+
+        set.status = 200;
+        return getTaskById;
+      },
+      {
+        params: t.Object({
+          id: t.Numeric(),
+        }),
+      }
+    )
+
     /**
      * POST /tasks
      * Add new task to the list.
      */
     .post(
       '/',
-      async ({ body, status }) => {
-        // TODO: Add newTask schema here.
-      },
+      async ({ body, set }) => {
+        const tasks = await getTasks();
 
+        const newTask = {
+          id: Date.now(),
+          description: body.description,
+          status: body.status,
+        };
+
+        tasks.push(newTask);
+        await saveTasks(tasks);
+
+        set.status = 201;
+        return newTask;
+      },
       {
         body: t.Object({
           description: t.String({ minLength: 4 }),
           status: t.UnionEnum(['pending', 'in-progress', 'completed']),
         }),
+      }
+    )
+
+    /**
+     * PATCH /tasks/:id
+     * Allow user to update task status or description.
+     */
+    .patch(
+      '/:id',
+      async ({ body, params, set }) => {
+        const tasks = await getTasks();
+        const taskIndex = tasks.findIndex((t: Task) => t.id === params.id);
+
+        if (taskIndex === -1) {
+          set.status = 404;
+          return { error: 'Not found ¯\\_(ツ)_/¯' };
+        }
+
+        // TODO: Find a way to make this safer from injection sink, per ESlint complaint
+        tasks[taskIndex] = {
+          ...tasks[taskIndex],
+          ...(body.description !== undefined && {
+            description: body.description,
+          }),
+          ...(body.status !== undefined && { status: body.status }),
+        } as Task;
+
+        await saveTasks(tasks);
+        set.status = 200;
+        return tasks[taskIndex];
+      },
+      {
+        params: t.Object({
+          id: t.Numeric(),
+        }),
+        body: t.Partial(
+          t.Object({
+            description: t.String({ minLength: 4 }),
+            status: t.UnionEnum(['pending', 'in-progress', 'completed']),
+          })
+        ),
       }
     )
 );
@@ -125,7 +197,15 @@ export const app = new Elysia()
     author: 'Tegar Wijaya Kusuma',
   }))
 
-  // 404 for unknown routes
+  // Contains echo, taskGroup and Swagger Elysia .group()
+  .use(echo)
+  .use(taskGroup)
+  .use(swagger())
+
+  /**
+   * 404 for unknown routes
+   * Claude said: "Catch-alls should always be last." after .use()
+   */
   .get('/*', ({ set }) => {
     set.status = 404;
 
@@ -143,10 +223,6 @@ export const app = new Elysia()
     };
   })
 
-  // Contains taskGroup, echo, swagger and PORT
-  .use(echo)
-  .use(taskGroup)
-  .use(swagger())
   .listen(PORT);
 
 // Reload message
