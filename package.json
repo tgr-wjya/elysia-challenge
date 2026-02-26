@@ -12,7 +12,8 @@
     "eslint-plugin-security": "^4.0.0",
     "eslint-plugin-sonarjs": "^4.0.0",
     "husky": "^9.1.7",
-    "prettier": "^3.8.1"
+    "prettier": "^3.8.1",
+    "yaml": "^2.6.1"
   },
   "peerDependencies": {
     "typescript": "^5"
