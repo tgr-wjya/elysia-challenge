@@ -12,7 +12,7 @@
  * 1. POST /echo - for user body validation.
  *
  * @author Tegar Wijaya Kusuma
- * @date 24 - 25 February 2026
+ * @date 24 - 27 February 2026
  */
 
 /**
@@ -83,108 +83,120 @@ export const echo = new Elysia().group('/echo', (app) =>
  * === taskGroup ===
  * Task API with 5 endpoint
  */
-export const taskGroup = new Elysia().group('/tasks', (app) =>
-  app
-    /**
-     * GET /tasks/all
-     * Returns all tasks,
-     * The @PROJECT-SPEC doesn't mention using /all but I thought it'd be a good addition.
-     */
-    .get('/all', async ({ set }) => {
-      set.status = 200;
-      return await getTasks();
-    })
-
-    /**
-     * GET /tasks/:id
-     * Return a single task by its ID.
-     */
-    .get(
-      '/:id',
-      async ({ params, set }) => {
-        const tasks = await getTasks();
-
-        const getTaskById = tasks.find((t: Task) => t.id === params.id);
-
+export const taskGroup = new Elysia().group(
+  '/tasks',
+  (app) =>
+    app
+      /**
+       * GET /tasks/all
+       * Returns all tasks,
+       * The @PROJECT-SPEC doesn't mention using /all but I thought it'd be a good addition.
+       */
+      .get('/all', async ({ set }) => {
         set.status = 200;
-        return getTaskById;
-      },
-      {
-        params: t.Object({
-          id: t.Numeric(),
-        }),
-      }
-    )
+        return await getTasks();
+      })
 
-    /**
-     * POST /tasks
-     * Add new task to the list.
-     */
-    .post(
-      '/',
-      async ({ body, set }) => {
-        const tasks = await getTasks();
+      /**
+       * GET /tasks/:id
+       * Return a single task by its ID.
+       */
+      .get(
+        '/:id',
+        async ({ params, set }) => {
+          const tasks = await getTasks();
 
-        const newTask = {
-          id: Date.now(),
-          description: body.description,
-          status: body.status,
-        };
+          const getTaskById = tasks.find((t: Task) => t.id === params.id);
 
-        tasks.push(newTask);
-        await saveTasks(tasks);
+          if (!getTaskById) {
+            set.status = 404;
+            return { error: 'Task not found' };
+          }
 
-        set.status = 201;
-        return newTask;
-      },
-      {
-        body: t.Object({
-          description: t.String({ minLength: 4 }),
-          status: t.UnionEnum(['pending', 'in-progress', 'completed']),
-        }),
-      }
-    )
-
-    /**
-     * PATCH /tasks/:id
-     * Allow user to update task status or description.
-     */
-    .patch(
-      '/:id',
-      async ({ body, params, set }) => {
-        const tasks = await getTasks();
-        const taskIndex = tasks.findIndex((t: Task) => t.id === params.id);
-
-        if (taskIndex === -1) {
-          set.status = 404;
-          return { error: 'Not found ¯\\_(ツ)_/¯' };
-        }
-
-        // TODO: Find a way to make this safer from injection sink, per ESlint complaint
-        tasks[taskIndex] = {
-          ...tasks[taskIndex],
-          ...(body.description !== undefined && {
-            description: body.description,
+          set.status = 200;
+          return getTaskById;
+        },
+        {
+          params: t.Object({
+            id: t.Numeric(),
           }),
-          ...(body.status !== undefined && { status: body.status }),
-        } as Task;
+        }
+      )
 
-        await saveTasks(tasks);
-        set.status = 200;
-        return tasks[taskIndex];
-      },
-      {
-        params: t.Object({
-          id: t.Numeric(),
-        }),
-        body: t.Partial(
-          t.Object({
+      // TODO: POST /tasks — add second it() for validation rejection
+      // e.g. missing description or invalid status should return 400
+      /**
+       * POST /tasks
+       * Add new task to the list.
+       */
+      .post(
+        '/',
+        async ({ body, set }) => {
+          const tasks = await getTasks();
+
+          const newTask = {
+            id: Date.now(),
+            description: body.description,
+            status: body.status,
+          };
+
+          tasks.push(newTask);
+          await saveTasks(tasks);
+
+          set.status = 201;
+          return newTask;
+        },
+        {
+          body: t.Object({
             description: t.String({ minLength: 4 }),
             status: t.UnionEnum(['pending', 'in-progress', 'completed']),
-          })
-        ),
-      }
-    )
+          }),
+        }
+      )
+
+      /**
+       * PATCH /tasks/:id
+       * Allow user to update task status or description.
+       */
+      .patch(
+        '/:id',
+        async ({ body, params, set }) => {
+          const tasks = await getTasks();
+          const taskIndex = tasks.findIndex((t: Task) => t.id === params.id);
+
+          if (taskIndex === -1) {
+            set.status = 404;
+            return { error: 'Task not found ¯\\_(ツ)_/¯' };
+          }
+
+          // TODO: Find a way to make this safer from injection sink, per ESlint complaint
+          tasks[taskIndex] = {
+            ...tasks[taskIndex],
+            ...(body.description !== undefined && {
+              description: body.description,
+            }),
+            ...(body.status !== undefined && { status: body.status }),
+          } as Task;
+
+          await saveTasks(tasks);
+          set.status = 200;
+          return tasks[taskIndex];
+        },
+        {
+          params: t.Object({
+            id: t.Numeric(),
+          }),
+          body: t.Partial(
+            t.Object({
+              description: t.String({ minLength: 4 }),
+              status: t.UnionEnum(['pending', 'in-progress', 'completed']),
+            })
+          ),
+        }
+      )
+  // TODO: DELETE /tasks/:id — not started at all, needs:
+  //   - happy path: task exists, returns remaining array, status 200
+  //   - 404 path: ID not in mock array, returns 404
 );
 
 /**
@@ -206,7 +218,7 @@ export const app = new Elysia()
    * 404 for unknown routes
    * Claude said: "Catch-alls should always be last." after .use()
    */
-  .get('/*', ({ set }) => {
+  .all('/*', ({ set }) => {
     set.status = 404;
 
     return {

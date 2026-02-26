@@ -6,8 +6,8 @@ trying to complete elysia mastery challenge. the challenge consist of **rest api
 
 ## date
 
-- day 13
-- 18 - 26 february 2026
+- day 14
+- 18 - 27 february 2026
 - week 2
 
 ## time spent
@@ -20,8 +20,9 @@ trying to complete elysia mastery challenge. the challenge consist of **rest api
 - sixth session: 3 hrs 56 mins
 - seventh session: 4 hrs 22 mins
 - eight session: 2 hrs 38 mins
-- ninth session: 2 hrs
-- total: **24 hours 20 minutes**
+- ninth session: 2 hrs 43 mins
+- tenth session: 2 hrs 24 mins
+- total: **27 hours and 27 minutes**
 
 ## struggle
 
@@ -393,12 +394,50 @@ nothing worth mentioning here.
     expect(data).toBe('hello!');
     ```
 
-- i didn't really learn much today, i feel like writing a test runner just mostly asking stuff which i'm conflicted whether its cheating or not, i don't get the feelings that i actually understood it like i do with rest api.
-- i'll consult this about this later.
-- writing your own test runner is a good skills, but i don't know if i really cheat it out.
-- test runner is actually easy, its just that i mostly ask for a confirmation before letting myself struggle with it first.
-- it was a simple question, how do you test this and that, in the end i'll have to piece up the test together but yeah i didn't really struggle with the implementation because i asked straight away even when i piece up the code snippet example on my own.
-- i don't know what to do, my `index2.ts` is nearing its refactor completion so let's hope that i know what to do later.
+- okay, i learn so much today. let me tell you what happened.
+- i absolutely demolish the test runner, as expected it was really that easy. thankfully, i have docs to guide me to the right path.
+- apparently, you should use `=== -1` for condition checking in `PATCH` that's certainly if your `findID` function using `findIndex()` and not `find()`. here's why:
+  - findIndex returns a number, representing the position of the item in the array.
+  - if it finds nothing, it returns -1 specifically. there's no true/false in `findIndex()`, its just was to search an index.
+  - so `!taskIndex` won't work because `!0` is true, meaning if your task happens to be at index 0, it would accidentally trigger the 404, meaning you're never connected to the task at all.
+  - `=== -1` just basically mean "did findIndex come back empty-handed?" without accidentally catching index 0 in your json.
+- `.mockResolvedValue(0)` just means "**pretend write succeeded, return 0 bytes written."** numbers doesn't matter here, you can put it whatever you want.
+- per claude suggestion, you should be scrutinizing your `index2.ts` like crazy, even if the check is insignificant like checking if your `POST` actually reject username shorter than 3 chars with 400.
+- best practice for bun test runner:
+  - use descriptive test names -
+  - ```typescript
+    // Good
+    test('should calculate total price including tax for multiple items', () => {
+      // test implementation
+    });
+
+    // Avoid
+    test('price calculation', () => {
+      // test implementation
+    });
+    ```
+
+  - group related test, like i did here [index.test.ts](/index.test.ts)
+  - use appropriate matchers, don't just be checking with `.toBe()` for everything
+  - ```typescript
+    // Good: Use specific matchers
+    expect(users).toHaveLength(3);
+    expect(user.email).toContain('@');
+    expect(response.status).toBeGreaterThanOrEqual(200);
+
+    // Avoid: Using toBe for everything
+    expect(users.length === 3).toBe(true);
+    expect(user.email.includes('@')).toBe(true);
+    expect(response.status >= 200).toBe(true);
+    ```
+
+- don't forget that you still need to mock `Bun.file` for an endpoint 404 with params, otherwise it'll try to read your real `tasks.json`
+- for checking a `404` status, even with mock you could also pass an empty array, it guarantees returning `undefined` regardless of the id you tried to pass. apparently, that's the cleanest way to force 404 checking.
+- also remember that if the endpoint were expecting a `body` and you're not using `Content-Type` at all. elysia validator will rejects it with a 400 before your handler even runs
+- you should be careful with that otherwise you're never reaching `404` to begin with.
+- also, always make sure to check the type of the response, whether its `Array` or `Object` use `.toBeObject()` and `.toBeArray()`
+- claude suggested me to try using `.beforeEach()` and `.afterEach()`, i'll give it a try tomorrow.
+- currently, the test runner absolutely works, its just missing some validation. let me prepare myself tomorrow with todo;
 
 # http status code cheat sheet
 
@@ -425,6 +464,6 @@ for more codes, see [mdn web docs](https://developer.mozilla.org/en-US/docs/Web/
 
 ---
 
-18 - 26 february 2026
+18 - 27 february 2026
 
 made with ◉‿◉

@@ -1,8 +1,8 @@
 /**
- * Reformatting my ELysia + Bun test runner.
+ * Writing my own test runner
  *
  * @author Tegar Wijaya Kusuma
- * @date 18 - 25 February 2026
+ * @date 26 - 27 February 2026
  */
 
 import { describe, expect, it, spyOn } from 'bun:test';
@@ -10,44 +10,47 @@ import { app } from './index2';
 
 const BASE_URL = 'http://localhost:3000';
 
-type Task = {
+interface Task {
   id: number;
   description: string;
   status: string;
-};
+}
 
-// For /root and wildcards
-describe('Testing server responsiveness and wildcard', () => {
+// TODO: Consider using beforeEach() and afterEach()
+
+/**
+ * For /root, /echo and /wildcards
+ */
+describe('Testing /root, /wildcards and /echo responsiveness', () => {
   describe('GET /root', () => {
-    it('Should return a kaomoji and author (me)', async () => {
+    it('Should return kaomoji and author (me)', async () => {
       const response = await app.handle(
         new Request(`${BASE_URL}`, {
           method: 'GET',
         })
       );
 
-      const authorAndKaomoji = await response.json();
-      expect(authorAndKaomoji).toBeObject();
-      expect(authorAndKaomoji).toEqual({
+      const kaomojiAndAuthor = await response.json();
+      expect(kaomojiAndAuthor).toBeObject();
+      expect(kaomojiAndAuthor).toEqual({
         kaomoji: 'made with ◉‿◉',
         author: 'Tegar Wijaya Kusuma',
       });
     });
   });
 
-  describe('GET /* wildcards', () => {
-    it('Should returns an array of object', async () => {
+  describe('ALL /wildcards', () => {
+    it('Should returns 404 and JSON object', async () => {
       const response = await app.handle(
         new Request(`${BASE_URL}/test`, {
-          method: 'GET',
-          headers: { 'Content-Type': '	application/json' },
+          method: 'POST',
         })
       );
 
-      const wildcard = await response.json();
-      expect(wildcard).toBeObject();
+      const wildcards = await response.json();
+      expect(wildcards).toBeObject();
       expect(response.status).toBe(404);
-      expect(wildcard).toEqual({
+      expect(wildcards).toEqual({
         error: 'Not found ¯\\_(ツ)_/¯',
         message: "This endpoint doesn't exist",
         availableEndpoints: [
@@ -61,43 +64,42 @@ describe('Testing server responsiveness and wildcard', () => {
       });
     });
   });
-});
 
-// echo
-describe('Testing /echo', () => {
-  it('Should echo user body', async () => {
-    const echoUser = {
-      username: 'Jack',
-      age: 22,
-    };
+  describe('POST /echo', () => {
+    it('Should echo user body as validation', async () => {
+      const userSchema = {
+        username: 'Jack',
+        age: 22,
+      };
 
-    const response = await app.handle(
-      new Request(`${BASE_URL}/echo`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(echoUser),
-      })
-    );
+      const response = await app.handle(
+        new Request(`${BASE_URL}/echo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userSchema),
+        })
+      );
 
-    expect(response.status).toBe(201);
-
-    const created = await response.json();
-    expect(created).toEqual({
-      username: 'Jack',
-      age: 22,
+      const userEcho = await response.json();
+      expect(response.status).toBe(201);
+      expect(userEcho).toEqual({
+        username: 'Jack',
+        age: 22,
+      });
     });
+    // TODO: POST /echo — add second it() for validation rejection
+    // e.g. username under 3 chars should return 400, age below 1 should return 400
   });
 });
 
-// taskGroup
-describe('Testing /tasks API', () => {
+describe('Testing taskGroup', () => {
   describe('GET /tasks/all', () => {
-    it('Should returns all tasks', async () => {
+    it('Should return all tasks on the list', async () => {
       spyOn(Bun, 'file').mockReturnValue({
         // eslint-disable-next-line @typescript-eslint/require-await
         json: async () => [
-          { id: 71823891, description: 'what to put?', status: 'pending' },
-          { id: 67182912, description: 'hello, world!', status: 'completed' },
+          { id: 12671, description: 'hello, test runner', status: 'completed' },
+          { id: 128981, description: 'hello, bruh', status: 'pending' },
         ],
         // eslint-disable-next-line @typescript-eslint/require-await
         exists: async () => true,
@@ -109,84 +111,167 @@ describe('Testing /tasks API', () => {
         })
       );
 
-      const tasks = (await response.json()) as Task[];
+      const allTasks = (await response.json()) as Task[];
       expect(response.status).toBe(200);
-      expect(Array.isArray(tasks)).toBe(true);
-      expect(tasks[0]).toHaveProperty('id');
+      expect(allTasks).toBeArray();
+      expect(allTasks[0]).toEqual({
+        id: 12671,
+        description: 'hello, test runner',
+        status: 'completed',
+      });
+      expect(allTasks[1]).toEqual({
+        id: 128981,
+        description: 'hello, bruh',
+        status: 'pending',
+      });
     });
   });
 
-  describe('POST /tasks', () => {
-    it('Should send and return new task to the list', async () => {
+  describe('GET /tasks/:id and 404', () => {
+    it('Should return a single task with params', async () => {
       spyOn(Bun, 'file').mockReturnValue({
         // eslint-disable-next-line @typescript-eslint/require-await
-        json: async () => [{ id: 1, description: 'Test', status: 'pending' }],
+        json: async () => [
+          { id: 671289, description: 'check this out!', status: 'pending' },
+        ],
         // eslint-disable-next-line @typescript-eslint/require-await
         exists: async () => true,
       } as unknown as ReturnType<typeof Bun.file>);
 
-      const writeSpy = spyOn(Bun, 'write').mockResolvedValue(42);
+      const taskId = 671289;
 
-      const newTask = {
-        description: 'Sip my coffee',
-        status: 'in-progress',
-      };
+      const response = await app.handle(
+        new Request(`${BASE_URL}/tasks/${taskId}`, {
+          method: 'GET',
+        })
+      );
+
+      const task = await response.json();
+      expect(response.status).toBe(200);
+      expect(task).toEqual({
+        id: 671289,
+        description: 'check this out!',
+        status: 'pending',
+      });
+    });
+
+    it('Should return 404 for non-existent id', async () => {
+      spyOn(Bun, 'file').mockReturnValue({
+        // eslint-disable-next-line @typescript-eslint/require-await
+        json: async () => [
+          { id: 12728, description: 'testerr', status: 'pending' },
+        ],
+        // eslint-disable-next-line @typescript-eslint/require-await
+        exists: async () => true,
+      } as unknown as ReturnType<typeof Bun.file>);
+
+      const nonExistentID = 612789;
+      const response = await app.handle(
+        new Request(`${BASE_URL}/tasks/${nonExistentID}`, {
+          method: 'GET',
+        })
+      );
+
+      const faultyTask = await response.json();
+      expect(response.status).toBe(404);
+      expect(faultyTask).toEqual({ error: 'Task not found' });
+    });
+  });
+
+  describe('POST /tasks', () => {
+    it('Should Add a new task to the list', async () => {
+      spyOn(Bun, 'file').mockReturnValue({
+        // eslint-disable-next-line @typescript-eslint/require-await
+        json: async () => [
+          { id: 1772127166755, description: 'same here', status: 'completed' },
+        ],
+        // eslint-disable-next-line @typescript-eslint/require-await
+        exists: async () => true,
+      } as unknown as ReturnType<typeof Bun.file>);
+
+      spyOn(Bun, 'write').mockResolvedValue(17);
 
       const response = await app.handle(
         new Request(`${BASE_URL}/tasks`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newTask),
+          body: JSON.stringify({
+            description: 'same here',
+            status: 'completed',
+          }),
         })
       );
 
+      // I have a theory here, i may have accidentally push the request for real, that's why the id value didn't match.
+      // Because you can't insert id by yourself, it was created automatically by Date.now()
+      // For now, I'll follow Claude's suggestion
+      const created = (await response.json()) as Task;
       expect(response.status).toBe(201);
-      const taskCreated = (await response.json()) as Task;
-      expect(taskCreated.description).toBe('Sip my coffee');
-      expect(taskCreated.status).toBe('in-progress');
-      expect(writeSpy).toHaveBeenCalled();
+      expect(created).toHaveProperty('id');
+      expect(created.description).toBe('same here');
+      expect(created.status).toBe('completed');
     });
+    // TODO: PATCH /tasks/:id — add it() for partial update with status only
+    // (currently only tests description-only update)
   });
 
-  describe('GET /tasks/:id', () => {
-    it('Should return a single task by its ID', async () => {
+  describe('PATCH /tasks/:id', () => {
+    it('Should update task status or description', async () => {
       spyOn(Bun, 'file').mockReturnValue({
         // eslint-disable-next-line @typescript-eslint/require-await
         json: async () => [
           {
-            id: 671289120,
-            description: 'Lingering around',
-            status: 'completed',
+            id: 217,
+            description: 'testing',
+            status: 'pending',
           },
         ],
         // eslint-disable-next-line @typescript-eslint/require-await
         exists: async () => true,
       } as unknown as ReturnType<typeof Bun.file>);
 
-      const mockTaskId = {
-        id: 671289120,
-      };
+      spyOn(Bun, 'write').mockResolvedValue(21);
+
+      const taskID = 217;
 
       const response = await app.handle(
-        new Request(`${BASE_URL}/tasks/${mockTaskId.id}`, {
-          method: 'GET',
+        new Request(`${BASE_URL}/tasks/${taskID}`, {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            description: 'test PATCH',
+          }),
         })
       );
 
+      const updated = (await response.json()) as Task;
       expect(response.status).toBe(200);
-      const taskId = await response.json();
-      expect(taskId).toEqual({
-        id: 671289120,
-        description: 'Lingering around',
-        status: 'completed',
-      });
+      expect(updated.description).toBe('test PATCH');
+      expect(updated.status).toBe('pending');
     });
-  });
 
-  describe('PATCH /tasks/:id', () => {
-    it('Should update task status or description', async () => {
-      // TODO: Continue this tomorrow
+    it('Should return 404 for invalid ID', async () => {
+      spyOn(Bun, 'file').mockReturnValue({
+        // eslint-disable-next-line @typescript-eslint/require-await
+        json: async () => [
+          { id: 12728, description: 'tester', status: 'pending' },
+        ],
+        // eslint-disable-next-line @typescript-eslint/require-await
+        exists: async () => true,
+      } as unknown as ReturnType<typeof Bun.file>);
+
+      const dummyId = 78219;
+      const response = await app.handle(
+        new Request(`${BASE_URL}/tasks/${dummyId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ description: 'test' }),
+        })
+      );
+
+      const faulty = await response.json();
+      expect(response.status).toBe(404);
+      expect(faulty).toEqual({ error: 'Task not found ¯\\_(ツ)_/¯' });
     });
   });
 });
