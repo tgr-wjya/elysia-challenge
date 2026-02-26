@@ -210,6 +210,90 @@ You're only mocking the parts you need (`json`, `exists`). TypeScript complains 
 
 ---
 
+## What to Mock Per Method
+
+The rule is simple: **read = mock `Bun.file`, write = mock `Bun.write` too.**
+
+| Endpoint            | `Bun.file` | `Bun.write` | Why                               |
+| ------------------- | ---------- | ----------- | --------------------------------- |
+| `GET /tasks/all`    | ✅ yes     | ❌ no       | only reads                        |
+| `GET /tasks/:id`    | ✅ yes     | ❌ no       | only reads                        |
+| `POST /tasks`       | ✅ yes     | ✅ yes      | reads existing array, then writes |
+| `PATCH /tasks/:id`  | ✅ yes     | ✅ yes      | reads, mutates, then writes       |
+| `DELETE /tasks/:id` | ✅ yes     | ✅ yes      | reads, filters, then writes       |
+
+### Mocking `Bun.file` only (GET endpoints)
+
+```typescript
+spyOn(Bun, 'file').mockReturnValue({
+  json: async () => [{ id: 1, description: 'buy milk', status: 'pending' }],
+  exists: async () => true,
+} as unknown as ReturnType<typeof Bun.file>);
+```
+
+### Mocking both `Bun.file` and `Bun.write` (POST, PATCH, DELETE)
+
+```typescript
+spyOn(Bun, 'file').mockReturnValue({
+  json: async () => [{ id: 1, description: 'buy milk', status: 'pending' }],
+  exists: async () => true,
+} as unknown as ReturnType<typeof Bun.file>);
+
+// mock write so it doesn't touch your real tasks.json
+spyOn(Bun, 'write').mockResolvedValue(0);
+```
+
+`mockResolvedValue(0)` just means "pretend write succeeded, return 0 bytes written." You don't care about the return value — you just need to stop the real write from firing.
+
+### Verifying that write was actually called (optional but useful)
+
+```typescript
+const writeSpy = spyOn(Bun, 'write').mockResolvedValue(0);
+
+// ... make the request ...
+
+expect(writeSpy).toHaveBeenCalled(); // confirms the handler tried to save
+```
+
+### Full example — POST (both mocks together)
+
+```typescript
+describe('POST /tasks', () => {
+  it('should create a new task and return 201', async () => {
+    // Arrange — mock the read so the handler sees an existing array
+    spyOn(Bun, 'file').mockReturnValue({
+      json: async () => [
+        { id: 1, description: 'existing task', status: 'pending' },
+      ],
+      exists: async () => true,
+    } as unknown as ReturnType<typeof Bun.file>);
+
+    // Arrange — mock the write so it doesn't touch tasks.json
+    spyOn(Bun, 'write').mockResolvedValue(0);
+
+    // Act
+    const response = await app.handle(
+      new Request(`${BASE_URL}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: 'new task', status: 'pending' }),
+      })
+    );
+
+    // Assert
+    expect(response.status).toBe(201);
+    const created = await response.json();
+    expect(created).toHaveProperty('id');
+    expect(created.description).toBe('new task');
+    expect(created.status).toBe('pending');
+  });
+});
+```
+
+Same pattern applies to PATCH and DELETE — just change the method, body, and assertions.
+
+---
+
 ## `beforeEach` and `afterEach`
 
 Run setup or teardown before/after every test in a `describe` block.
