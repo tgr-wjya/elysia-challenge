@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Bun",
+      "type": "bun",
+      "request": "launch",
+      "program": "${file}",
+      "watchMode": false
+    }
+  ]
+}

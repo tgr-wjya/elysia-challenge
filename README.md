@@ -22,7 +22,8 @@ trying to complete elysia mastery challenge. the challenge consist of **rest api
 - eight session: 2 hrs 38 mins
 - ninth session: 2 hrs 43 mins
 - tenth session: 2 hrs 24 mins
-- total: **27 hours and 27 minutes**
+- eleven session: 2 hrs
+- total: **29 hours and 27 minutes**
 
 ## struggle
 
@@ -440,6 +441,19 @@ nothing worth mentioning here.
 - currently, the test runner absolutely works, its just missing some validation. let me prepare myself tomorrow with todo;
 - i didn't really do much today, btw.
 - elysia by default returns `422 Unprocessable Entity` for schema validation so if you're thinking of checking your schema validation in test runner, use `422` and not `400` which is more semantically correct here.
+- okay, i just spent an hour checking out debugger and its actually amazing.
+- i also checkout [REST CLIENT](https://github.com/Huachao/vscode-restclient) too, its interesting but i don't know whether i'm going to use them regularly or not.
+- also, for sending a json body. you need to double quote both property and value. meaning, it look like this: `{ "username": "Jack", "age": 21 }`
+- another point worth mentioning is that you must not use `,` trailing coma on the json body that you're trying to pass otherwise you'll get 400 code.
+- what likely happened is that elysia seeing you with a trailing coma, expect you to put a different property which doesn't exist.
+  - ```http
+    POST {{baseUrl}}/echo
+    Content-Type: application/json
+
+    { "username": "Jack", "age": 21, } // this won't work because there's a trailing coma after `age` property.
+
+    { "username": "Jack", "age": 21 } // this'll immediately work.
+    ```
 
 # http status code cheat sheet
 
@@ -466,6 +480,6 @@ for more codes, see [mdn web docs](https://developer.mozilla.org/en-US/docs/Web/
 
 ---
 
-18 - 27 february 2026
+18 - 28 february 2026
 
 made with ◉‿◉

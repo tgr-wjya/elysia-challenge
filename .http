@@ -1,5 +1,15 @@
 @baseUrl = http://localhost:3000
 
-### GET /tasks/all
-GET @{{baseUrl}}/tasks/all
+### GET /root
+GET {{baseUrl}}
 Content-Type: application/json
+
+### GET /wildcards
+GET {{baseUrl}}/jsonn
+Content-Type: application/json
+
+### POST /echo
+POST {{baseUrl}}/echo
+Content-Type: application/json
+
+{ "username": "Jack", "age": 21 }

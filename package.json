@@ -23,6 +23,7 @@
     "elysia": "^1.4.25"
   },
   "scripts": {
+    "watch": "bun run --watch index2.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "bun test"
