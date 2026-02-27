@@ -89,6 +89,22 @@ describe('Testing /root, /wildcards and /echo responsiveness', () => {
     });
     // TODO: POST /echo — add second it() for validation rejection
     // e.g. username under 3 chars should return 400, age below 1 should return 400
+    it('Should return 404 for body not following schema, username under 3 chars and age less than 1', async () => {
+      const userSchema = {
+        username: 'Ab',
+        age: 0,
+      };
+
+      const response = await app.handle(
+        new Request(`${BASE_URL}/echo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userSchema),
+        })
+      );
+
+      expect(response.status).toBe(400);
+    });
   });
 });
 
