@@ -1,0 +1,5 @@
+@baseUrl = http://localhost:3000
+
+### GET /tasks/all
+GET @{{baseUrl}}/tasks/all
+Content-Type: application/json
