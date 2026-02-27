@@ -103,7 +103,7 @@ describe('Testing /root, /wildcards and /echo responsiveness', () => {
         })
       );
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(422);
     });
   });
 });

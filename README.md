@@ -438,6 +438,8 @@ nothing worth mentioning here.
 - also, always make sure to check the type of the response, whether its `Array` or `Object` use `.toBeObject()` and `.toBeArray()`
 - claude suggested me to try using `.beforeEach()` and `.afterEach()`, i'll give it a try tomorrow.
 - currently, the test runner absolutely works, its just missing some validation. let me prepare myself tomorrow with todo;
+- i didn't really do much today, btw.
+- elysia by default returns `422 Unprocessable Entity` for schema validation so if you're thinking of checking your schema validation in test runner, use `422` and not `400` which is more semantically correct here.
 
 # http status code cheat sheet
 
