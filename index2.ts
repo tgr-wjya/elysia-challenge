@@ -83,120 +83,137 @@ export const echo = new Elysia().group('/echo', (app) =>
  * === taskGroup ===
  * Task API with 5 endpoint
  */
-export const taskGroup = new Elysia().group(
-  '/tasks',
-  (app) =>
-    app
-      /**
-       * GET /tasks/all
-       * Returns all tasks,
-       * The @PROJECT-SPEC doesn't mention using /all but I thought it'd be a good addition.
-       */
-      .get('/all', async ({ set }) => {
-        set.status = 200;
-        return await getTasks();
-      })
+export const taskGroup = new Elysia().group('/tasks', (app) =>
+  app
+    /**
+     * GET /tasks/all
+     * Returns all tasks,
+     * The @PROJECT-SPEC doesn't mention using /all but I thought it'd be a good addition.
+     */
+    .get('/all', async ({ set }) => {
+      set.status = 200;
+      return await getTasks();
+    })
 
-      /**
-       * GET /tasks/:id
-       * Return a single task by its ID.
-       */
-      .get(
-        '/:id',
-        async ({ params, set }) => {
-          const tasks = await getTasks();
+    // TODO: M7 Add afterHandle() for custom headers
+    // TODO: M8 Add onError whether globally or locally for custom error response. also formats it consistently all across the board.
+    /**
+     * GET /tasks/:id
+     * Return a single task by its ID.
+     */
+    .get(
+      '/:id',
+      async ({ params, set }) => {
+        const tasks = await getTasks();
 
-          const getTaskById = tasks.find((t: Task) => t.id === params.id);
+        const getTaskById = tasks.find((t: Task) => t.id === params.id);
 
-          if (!getTaskById) {
-            set.status = 404;
-            return { error: 'Task not found' };
-          }
-
-          set.status = 200;
-          return getTaskById;
-        },
-        {
-          params: t.Object({
-            id: t.Numeric(),
-          }),
+        if (!getTaskById) {
+          set.status = 404;
+          return { error: 'Task not found' };
         }
-      )
 
-      // TODO: POST /tasks — add second it() for validation rejection
-      // e.g. missing description or invalid status should return 400
-      /**
-       * POST /tasks
-       * Add new task to the list.
-       */
-      .post(
-        '/',
-        async ({ body, set }) => {
-          const tasks = await getTasks();
+        set.status = 200;
+        return getTaskById;
+      },
+      {
+        params: t.Object({
+          id: t.Numeric(),
+        }),
+      }
+    )
 
-          const newTask = {
-            id: Date.now(),
+    // TODO: M6 Add beforeHandle() for rate limiting
+    /**
+     * POST /tasks
+     * Add new task to the list.
+     */
+    .post(
+      '/',
+      async ({ body, set }) => {
+        const tasks = await getTasks();
+
+        const newTask = {
+          id: Date.now(),
+          description: body.description,
+          status: body.status,
+        };
+
+        tasks.push(newTask);
+        await saveTasks(tasks);
+
+        set.status = 201;
+        return newTask;
+      },
+      {
+        body: t.Object({
+          description: t.String({ minLength: 4 }),
+          status: t.UnionEnum(['pending', 'in-progress', 'completed']),
+        }),
+      }
+    )
+
+    /**
+     * PATCH /tasks/:id
+     * Allow user to update task status or description.
+     */
+    .patch(
+      '/:id',
+      async ({ body, params, set }) => {
+        const tasks = await getTasks();
+        const taskIndex = tasks.findIndex((t: Task) => t.id === params.id);
+
+        if (taskIndex === -1) {
+          set.status = 404;
+          return { error: 'Task not found ¯\\_(ツ)_/¯' };
+        }
+
+        tasks[taskIndex] = {
+          ...tasks[taskIndex],
+          ...(body.description !== undefined && {
             description: body.description,
-            status: body.status,
-          };
+          }),
+          ...(body.status !== undefined && { status: body.status }),
+        } as Task;
 
-          tasks.push(newTask);
-          await saveTasks(tasks);
-
-          set.status = 201;
-          return newTask;
-        },
-        {
-          body: t.Object({
+        await saveTasks(tasks);
+        set.status = 200;
+        return tasks[taskIndex];
+      },
+      {
+        params: t.Object({
+          id: t.Numeric(),
+        }),
+        body: t.Partial(
+          t.Object({
             description: t.String({ minLength: 4 }),
             status: t.UnionEnum(['pending', 'in-progress', 'completed']),
-          }),
+          })
+        ),
+      }
+    )
+
+    .delete(
+      '/:id',
+      async ({ params, set }) => {
+        const tasks = await getTasks();
+        const remainingTask = tasks.filter((t) => t.id !== params.id);
+
+        if (remainingTask.length === tasks.length) {
+          set.status = 404;
+          return { error: 'Task not found ¯\\_(ツ)_/¯' };
         }
-      )
 
-      /**
-       * PATCH /tasks/:id
-       * Allow user to update task status or description.
-       */
-      .patch(
-        '/:id',
-        async ({ body, params, set }) => {
-          const tasks = await getTasks();
-          const taskIndex = tasks.findIndex((t: Task) => t.id === params.id);
-
-          if (taskIndex === -1) {
-            set.status = 404;
-            return { error: 'Task not found ¯\\_(ツ)_/¯' };
-          }
-
-          // TODO: Find a way to make this safer from injection sink, per ESlint complaint
-          tasks[taskIndex] = {
-            ...tasks[taskIndex],
-            ...(body.description !== undefined && {
-              description: body.description,
-            }),
-            ...(body.status !== undefined && { status: body.status }),
-          } as Task;
-
-          await saveTasks(tasks);
-          set.status = 200;
-          return tasks[taskIndex];
-        },
-        {
-          params: t.Object({
-            id: t.Numeric(),
-          }),
-          body: t.Partial(
-            t.Object({
-              description: t.String({ minLength: 4 }),
-              status: t.UnionEnum(['pending', 'in-progress', 'completed']),
-            })
-          ),
-        }
-      )
-  // TODO: DELETE /tasks/:id — not started at all, needs:
-  //   - happy path: task exists, returns remaining array, status 200
-  //   - 404 path: ID not in mock array, returns 404
+        await saveTasks(remainingTask);
+        set.status = 200;
+        return remainingTask;
+      },
+      {
+        params: t.Object({
+          id: t.Numeric(),
+        }),
+      }
+    )
 );
 
 /**
@@ -208,6 +225,8 @@ export const app = new Elysia()
     kaomoji: 'made with ◉‿◉',
     author: 'Tegar Wijaya Kusuma',
   }))
+
+  //TODO: M9 Add derive for returning metadata (IP, timestamps, user-agent)
 
   // Contains echo, taskGroup and Swagger Elysia .group()
   .use(echo)
