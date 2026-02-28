@@ -1,13 +1,15 @@
 # elysia rest api mastery
 
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/tgr-wjya/elysia-challenge/semgrep.yml)](https://img.shields.io/github/actions/workflow/status/tgr-wjya/elysia-challenge/semgrep.yml)
+[![wakatime](https://wakatime.com/badge/user/7dc0c572-d103-462c-8b19-18b2aa52cc80/project/6b6f5ba9-2595-43fd-88cf-8e6ea3953e0b.svg)](https://wakatime.com/badge/user/7dc0c572-d103-462c-8b19-18b2aa52cc80/project/6b6f5ba9-2595-43fd-88cf-8e6ea3953e0b)
+[![CodeTime Badge](https://shields.jannchie.com/endpoint?style=social&color=222&url=https%3A%2F%2Fapi.codetime.dev%2Fv3%2Fusers%2Fshield%3Fuid%3D36362)](https://codetime.dev)
 
 trying to complete elysia mastery challenge. the challenge consist of **rest api**, **type-safety**, **test runner** and **hooks**.
 
 ## date
 
-- day 14
-- 18 - 27 february 2026
+- day 15
+- 18 february - 1 march 2026
 - week 2
 
 ## time spent
@@ -23,6 +25,7 @@ trying to complete elysia mastery challenge. the challenge consist of **rest api
 - ninth session: 2 hrs 43 mins
 - tenth session: 2 hrs 24 mins
 - eleven session: 2 hrs
+- twelve session: 2 hrs
 - total: **29 hours and 27 minutes**
 
 ## struggle
@@ -75,18 +78,7 @@ trying to complete elysia mastery challenge. the challenge consist of **rest api
 - i finally understand hooks and schema... now it all tied together beautifully. let me explain it later
 - turns out, parsing by id is really easy. you just define the schema you use as the id.
 - then use `.find` or `.map` to find the specific identifier in the `file.json`
-- test runner is actually easy as fuck, you're just validating what you've built and to avoid those incident..
-
-### Quick reference
-
-| Use case        | What to mock                 | Why?                                   |
-| --------------- | ---------------------------- | -------------------------------------- |
-| GET endpoint    | Return value                 | Control what the API returns           |
-| POST endpoint   | Initial file content, write  | Test adding new data, avoid real write |
-| PATCH endpoint  | Original file content, write | Test update logic, avoid real write    |
-| DELETE endpoint | Original file content, write | Test removal logic, avoid real write   |
-
----
+- test runner is actually easy as fuck, you're just validating what you've built and to avoid those incident.
 
 ## next project
 
@@ -455,6 +447,55 @@ nothing worth mentioning here.
     { "username": "Jack", "age": 21 } // this'll immediately work.
     ```
 
+- note! `find()` returns a single `Task`.
+- 100% COVERAGE LET'S FUCKING GOOO!!
+
+| File          | % Funcs | % Lines | Uncovered Line #s |
+| ------------- | ------- | ------- | ----------------- |
+| All files     | 96.77   | 99.70   |
+| index.test.ts | 93.55   | 99.40   | 225               |
+| index2.ts     | 100.00  | 100.00  |
+
+- check out [array-methods-operator](/docs/array-method.md) for more information about different rest api implementation and its reasoning
+- don't forget to use `[]` square brackets if you have a `Type` or `interface` schema. it'll be useful for checking an array with type-safety.
+- so far, i've understood how `spyOn` works. its easy to understand really, let me give an explanation in my own understanding here.
+  - for `spyOn(Bun, 'file').mockReturnValue({})`
+    - you're mocking a file here, this is the `getTask()` function equivalent.
+    - so far, i've only used `.mockReturnValue()` so far, hoping to use more in the future.
+  - as for `spyOn(Bun, 'write').mockResolvedValue()`
+    - you're mocking writing to a file and you guessed it, its the equivalent of `saveTask()` function.
+    - the number didn't matter, it was apparently just a mock byte or size.
+
+- let me tell you what i learned about debugging using vs code debugger. it ain't much but this'd definitely help me catch some persistent bug.
+- say it with me! http is so fucking easy, i know that swagger makes my life easier already but i think having a `.http` important because you'll be able to see what your server takes in a glance.
+- you should definitely check your test coverage because its genuinely useful af, otherwise you wouldn't know whether your server was being covered 100% or not.
+- now i could finally learn `.beforeHandle()` and `.afterHandle()` in peace.
+- claude said that `.toBeObject()` and `.toBeArray()` are redundant in test runner when you already know the the exact shape and values of it.
+- they're actually useful when you can't predict the exact content but still need to assert the shape
+  - ```typescript
+    // you don't know the exact task returned, but you need to assert it's an array
+    expect(response).toBeArray();
+    expect(response.length).toBeGreaterThan(0);
+
+    // or asserting a response is an object without knowing all its fields
+    expect(response).toBeObject();
+    expect(response.id).toBeDefined();
+    ```
+
+- both shine more in a scenarios like testing a third-party api response or a database query where the exact content varies per run.
+- i now get the point of why testing everything in your server matters, because looking at 100% coverage is so fucking satisfying
+- in case you forgot, "handler" just means a function that handles a request, this function's job is to handle something.
+- the order you write properties inside route object doesn't matter, you could write `body` before `beforeHandle` or after it, and it'll still works.
+- schema validation (`body`, `query`, `params`) even runs as part of the pipeline too, before `beforeHandle`. so even if you write `body` last, it always validates before the hook fires.
+- for `.onError()`checking. you don't need to define every error. just handle the specific ones you care about, blanket-catch the rest.
+- `onError` only fires when something **throws**. if i do `if (!task) return { error: 'not found' }`, nothing threw. it'd just returned early. `onError` never sees it. practically handling it manually inside the route handler itself.
+- if instead you do `if (!task) throw new Error('not found')`, now `onError` will catches it and formats it centrally.
+- the diffence between letting your route handles error and `onError`:
+
+  > with manual conditionals spread across every route, each one can return a slightly different shape. with `onError`, you throw anywhere and the formatting is guaranteed to be identical every time. there's only one place to change if you ever decided to restructure your whole error response.
+
+- btw, you can safely switch from having a 404 route handler logic if you're using `onError`. that is, only if you explicitly delegate the **throwing** to `onError` instead of your route handler logic. `if (!task) throw new Error('not found')`
+
 # http status code cheat sheet
 
 | code | meaning               | description                                     |
@@ -480,6 +521,6 @@ for more codes, see [mdn web docs](https://developer.mozilla.org/en-US/docs/Web/
 
 ---
 
-18 - 28 february 2026
+18 february - 1 march 2026
 
 made with ◉‿◉
