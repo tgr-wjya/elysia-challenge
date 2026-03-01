@@ -49,3 +49,6 @@ GET {{secondUrl}}
 ### GET @secondUrl /info
 GET {{secondUrl}}/info
 
+### GET /user-agent
+GET {{secondUrl}}/user-agent
+
