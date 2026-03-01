@@ -26,6 +26,7 @@ import { swagger } from '@elysiajs/swagger';
  */
 const DATA_PATH = 'tasks.json';
 const PORT = 3000;
+export const lastRequestTime = new Map<string, number>();
 
 /**
  * Task schema definition
@@ -146,6 +147,17 @@ export const taskGroup = new Elysia().group('/tasks', (app) =>
         return newTask;
       },
       {
+        beforeHandle: ({ set }) => {
+          const ip = '127.0.0.1';
+          const now = Date.now();
+          const last = lastRequestTime.get(ip);
+
+          if (last && now - last < 2000) {
+            set.status = 429;
+          }
+
+          lastRequestTime.set(ip, now);
+        },
         body: t.Object({
           description: t.String({ minLength: 4 }),
           status: t.UnionEnum(['pending', 'in-progress', 'completed']),
@@ -233,6 +245,7 @@ export const app = new Elysia()
   .use(taskGroup)
   .use(swagger())
 
+  // TODO: Add global onError to handle displaying consistent error: 'Not found ¯\\_(ツ)_/¯' across the board because SonarQube detected the duplicate.
   /**
    * 404 for unknown routes
    * Claude said: "Catch-alls should always be last." after .use()

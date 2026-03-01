@@ -6,7 +6,7 @@
  * @note These really are just for exploring because I don't want to muddle my already reformat index2.ts
  */
 
-import { Elysia, t } from 'elysia';
+import { Elysia } from 'elysia';
 import { swagger } from '@elysiajs/swagger';
 
 const PORT = 5000;
@@ -14,6 +14,10 @@ const BASE_URL = `http://localhost:${PORT}`;
 
 export const app = new Elysia()
   .get('/', () => ({ greet: 'Hello, there!' }))
+
+  .get('/user-agent', ({ server, request }) => {
+    return server?.requestIP(request);
+  })
 
   .derive(({ request }) => {
     return {

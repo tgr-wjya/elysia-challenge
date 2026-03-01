@@ -15,6 +15,8 @@ type Task = {
   status: 'pending' | 'in-progress' | 'completed';
 };
 
+export const lastRequestTime = new Map<string, number>();
+
 // Initialize the server
 export const app = new Elysia()
   // Root route, use this to greet all
@@ -76,6 +78,17 @@ export const app = new Elysia()
       return newTask;
     },
     {
+      beforeHandle: ({ set }) => {
+        const ip = '127.0.0.1';
+        const now = Date.now();
+        const last = lastRequestTime.get(ip);
+
+        if (last && now - last < 2000) {
+          set.status = 429;
+        }
+
+        lastRequestTime.set(ip, now);
+      },
       body: t.Object({
         // Let's just use id for the schema for now
         id: t.Numeric(),
@@ -154,18 +167,14 @@ export const app = new Elysia()
   .delete(
     '/tasks/:id',
     async ({ params, set }) => {
-      const tasks = await Bun.file(
-        new URL('tasks.json', import.meta.url)
-      ).json();
+      const tasks = await Bun.file(new URL('tasks.json', import.meta.url)).json();
 
       // TODO: Remove redundant schema
       const getTask = {
         id: params.id,
       };
 
-      const remainingTask = tasks.filter(
-        (t: Task) => Number(t.id) !== Number(getTask.id)
-      );
+      const remainingTask = tasks.filter((t: Task) => Number(t.id) !== Number(getTask.id));
 
       // CAUTION: MAKE SURE IT'S NOT DOUBLE NESTED, I JUST FUCKING SPENT 3 HOURS BECAUSE I DIDN'T REALIZE IT WAS DOUBLE NESTED.
 
