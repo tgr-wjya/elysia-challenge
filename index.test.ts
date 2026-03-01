@@ -8,6 +8,7 @@
 import { it, expect, describe, spyOn, beforeEach } from 'bun:test';
 import { app } from './index2';
 import { lastRequestTime } from './index2';
+import { resolve } from 'bun';
 
 const BASE_URL = 'http://localhost:3000';
 
@@ -17,6 +18,13 @@ describe('POST /tasks', () => {
   });
 
   it('Should block second request within 2 seconds', async () => {
+    spyOn(Bun, 'file').mockReturnValue({
+      json: async () => [{ id: 78129, description: 'something here', status: 'completed' }],
+      exists: async () => true,
+    } as unknown as ReturnType<typeof Bun.file>);
+
+    spyOn(Bun, 'write').mockResolvedValue(2121);
+
     const first = await app.handle(
       new Request(`${BASE_URL}/tasks`, {
         method: 'POST',
@@ -28,7 +36,7 @@ describe('POST /tasks', () => {
       })
     );
 
-    expect(first.status).toBe(200);
+    expect(first.status).toBe(201);
 
     const second = await app.handle(
       new Request(`${BASE_URL}/tasks`, {
@@ -41,6 +49,8 @@ describe('POST /tasks', () => {
       })
     );
 
+    const secondResponse = await second.json();
     expect(second.status).toBe(429);
+    expect(secondResponse).toEqual({ error: 'Too many request' });
   });
 });

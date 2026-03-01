@@ -8,25 +8,13 @@ trying to complete elysia mastery challenge. the challenge consist of **rest api
 
 ## date
 
-- day 15
-- 18 february - 1 march 2026
+- day 16
+- 18 february - 2 march 2026
 - week 2
 
 ## time spent
 
-- first session: 1 hours 25 mins
-- second session: 3 hrs 36 mins
-- third session: 17 mins
-- fourth session: 2 hrs 32 mins
-- fifth session: 3 hrs 34 mins
-- sixth session: 3 hrs 56 mins
-- seventh session: 4 hrs 22 mins
-- eight session: 2 hrs 38 mins
-- ninth session: 2 hrs 43 mins
-- tenth session: 2 hrs 24 mins
-- eleven session: 2 hrs
-- twelve session: 2 hrs
-- total: **29 hours and 27 minutes**
+- this is deprecated, i'll let both codetime and wakatime track my time spent.
 
 ## struggle
 
@@ -495,6 +483,9 @@ nothing worth mentioning here.
   > with manual conditionals spread across every route, each one can return a slightly different shape. with `onError`, you throw anywhere and the formatting is guaranteed to be identical every time. there's only one place to change if you ever decided to restructure your whole error response.
 
 - btw, you can safely switch from having a 404 route handler logic if you're using `onError`. that is, only if you explicitly delegate the **throwing** to `onError` instead of your route handler logic. `if (!task) throw new Error('not found')`
+- didn't really learn much today because i only work on this project for an hour or so.
+- hoping to get back in the game and finally complete this project, its been too long that i'm worried that i might get bored working on this project  pretty soon.
+- hoping to finish this project asap.
 
 # http status code cheat sheet
 
@@ -521,6 +512,6 @@ for more codes, see [mdn web docs](https://developer.mozilla.org/en-US/docs/Web/
 
 ---
 
-18 february - 1 march 2026
+18 february - 2 march 2026
 
 made with ◉‿◉

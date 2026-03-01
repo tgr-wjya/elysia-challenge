@@ -154,6 +154,7 @@ export const taskGroup = new Elysia().group('/tasks', (app) =>
 
           if (last && now - last < 2000) {
             set.status = 429;
+            return { error: 'Too many request' };
           }
 
           lastRequestTime.set(ip, now);
