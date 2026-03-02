@@ -3,6 +3,7 @@
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/tgr-wjya/elysia-challenge/semgrep.yml)](https://img.shields.io/github/actions/workflow/status/tgr-wjya/elysia-challenge/semgrep.yml)
 [![wakatime](https://wakatime.com/badge/user/7dc0c572-d103-462c-8b19-18b2aa52cc80/project/6b6f5ba9-2595-43fd-88cf-8e6ea3953e0b.svg)](https://wakatime.com/badge/user/7dc0c572-d103-462c-8b19-18b2aa52cc80/project/6b6f5ba9-2595-43fd-88cf-8e6ea3953e0b)
 [![CodeTime Badge](https://shields.jannchie.com/endpoint?style=social&color=222&url=https%3A%2F%2Fapi.codetime.dev%2Fv3%2Fusers%2Fshield%3Fuid%3D36362)](https://codetime.dev)
+[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json&style=flat&label=CodSpeed)](https://codspeed.io/tgr-wjya/elysia-challenge?utm_source=badge)
 
 trying to complete elysia mastery challenge. the challenge consist of **rest api**, **type-safety**, **test runner** and **hooks**.
 
@@ -212,14 +213,14 @@ nothing worth mentioning here.
   - if you leave `"status": ""` or `"description": "",` in there, the validator sees a value that doesn't match your Enum, and it rejects the whole request.
   - even if its technically valid, so you need to be wary.
 - both `/PATCH` and `/DELETE` has a different prefered method.
-  - apparently, in modern javascript/typescript. it’s often cleaner to "filter out" what you don't want rather than finding a position and "splicing" it out.
+  - apparently, in modern javascript/typescript. it's often cleaner to "filter out" what you don't want rather than finding a position and "splicing" it out.
   - that's precisely why you're using `.filter()` and `!==` for `/DELETE`
   - for `/DELETE`
     - `.filter()` goes through every single item in the array and asks a `True/False` question: "should this item stay in the new list?"
     - `!==` (not equal to):
       - if true (it's a different id), the item stays.
       - if false (it's the id you want to delete), the item is dropped.
-    - explanation from gemini: "For DELETE: It’s actually faster and less messy to just "re-deal" the deck without the unwanted card than it is to try and pull a card out of the middle and shove the rest of the cards together to fill the gap."
+    - explanation from gemini: "For DELETE: It's actually faster and less messy to just "re-deal" the deck without the unwanted card than it is to try and pull a card out of the middle and shove the rest of the cards together to fill the gap."
   - for `/PATCH`
     - think of your `tasks.json` as a row of lockers.
       - you want to change the sticker on locker #5.
@@ -382,7 +383,7 @@ nothing worth mentioning here.
   - if it finds nothing, it returns -1 specifically. there's no true/false in `findIndex()`, its just was to search an index.
   - so `!taskIndex` won't work because `!0` is true, meaning if your task happens to be at index 0, it would accidentally trigger the 404, meaning you're never connected to the task at all.
   - `=== -1` just basically mean "did findIndex come back empty-handed?" without accidentally catching index 0 in your json.
-- `.mockResolvedValue(0)` just means "**pretend write succeeded, return 0 bytes written."** numbers doesn't matter here, you can put it whatever you want.
+- `.mockResolvedValue(0)` just means "**pretend write succeeded, return 0 bytes written.**" numbers doesn't matter here, you can put it whatever you want.
 - per claude suggestion, you should be scrutinizing your `index2.ts` like crazy, even if the check is insignificant like checking if your `POST` actually reject username shorter than 3 chars with 400.
 - best practice for bun test runner:
   - use descriptive test names -

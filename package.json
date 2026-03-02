@@ -5,6 +5,7 @@
   "private": true,
   "devDependencies": {
     "@biomejs/biome": "^2.4.4",
+    "@codspeed/vitest-plugin": "^5.2.0",
     "@types/bun": "latest",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
@@ -12,7 +13,8 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-security": "^4.0.0",
     "eslint-plugin-sonarjs": "^4.0.0",
-    "husky": "^9.1.7"
+    "husky": "^9.1.7",
+    "vitest": "^4.0.18"
   },
   "peerDependencies": {
     "typescript": "^5"
