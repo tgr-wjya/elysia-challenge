@@ -19,7 +19,7 @@ Content-Type: application/json
 GET {{baseUrl}}/tasks/all
 
 ### GET /tasks/:id
-GET {{baseUrl}}/tasks/1771799756184
+GET {{baseUrl}}/tasks/1
 Content-Type: application/json
 
 ### POST /tasks
@@ -43,12 +43,6 @@ Content-Type: application/json
 DELETE {{baseUrl}}/tasks/1772301113115
 Content-Type: application/json
 
-### ALL  /root
-GET {{secondUrl}}
-
-### GET @secondUrl /info
-GET {{secondUrl}}/info
-
-### GET /user-agent
-GET {{secondUrl}}/user-agent
-
+### GET /kaomoji
+GET https://portfolio-kaomoji-api.account-outskirts892.workers.dev/
+Content-Type: application/json

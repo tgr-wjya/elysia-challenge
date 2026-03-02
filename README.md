@@ -8,8 +8,8 @@ trying to complete elysia mastery challenge. the challenge consist of **rest api
 
 ## date
 
-- day 16
-- 18 february - 2 march 2026
+- day 17
+- 18 february - 3 march 2026
 - week 2
 
 ## time spent
@@ -486,6 +486,34 @@ nothing worth mentioning here.
 - didn't really learn much today because i only work on this project for an hour or so.
 - hoping to get back in the game and finally complete this project, its been too long that i'm worried that i might get bored working on this project  pretty soon.
 - hoping to finish this project asap.
+- let me write down what i learned today, not much but hey at least i'm still working on this project.
+- from my understanding, you use `store` to make value persist across lifecycle. i still don't get the best practice of how you should do it but i'll likely figure this out later.
+- setting up CORS is easy, in route. now i only need to figure out how to make it appear at every request/response for api.
+- i'm like very bad at figuring out the math here.
+- i'm so dumb, i didn't realize what copilot was trying to say about `throw` earlier, now i know.
+- basically, you can standardize your error response across the endpoint
+- what you can't do is that, make it the same kind of error every endpoint because that's bad.
+- here's how you standardize your error response with `.onError()`
+  - ```typescript
+    onError(({ error, set }) => {
+      set.status = 404;
+      return { error: error.message, timestamp: new Date().toISOString() };
+    })
+
+    .get('/:id', async ({ params }) => {
+      const tasks = await getTasks();
+      const task = tasks.find((t: Task) => t.id === params.id);
+      if (!task) throw new Error('Task not found');
+      return task;
+    }, ...)
+    ```
+  
+  - did you see what i mean there? your `.onError()` is now standardized across the endpoint as long as you `throw` the error.
+  - when you do `throw` an error at some endpoint, you should specify what kind of error it was, so `.onError()` could display it then.
+- that's basically how they work.
+- `error` is just whatever you threw. elysia catches it and passes it straight into `onError` automatically.
+- i should make that a habit because it doesn't take much to implement.
+- secondly, i should really start putting hardcoded value in a `const` more. this is also non-intrusive and i could do it immediately.
 
 # http status code cheat sheet
 
@@ -512,6 +540,6 @@ for more codes, see [mdn web docs](https://developer.mozilla.org/en-US/docs/Web/
 
 ---
 
-18 february - 2 march 2026
+18 february - 3 march 2026
 
 made with ◉‿◉

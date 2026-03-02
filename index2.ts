@@ -26,6 +26,13 @@ import { swagger } from '@elysiajs/swagger';
  */
 const DATA_PATH = 'tasks.json';
 const PORT = 3000;
+const RATE_LIMIT_MS = 2000;
+const ERROR_TASK_NOT_FOUND = 'Task not found, unfortunately.';
+const MIN_USERNAME_LENGTH = 3;
+const MIN_AGE = 1;
+const MIN_DESCRIPTION_LENGTH = 4;
+const IP = '127.0.0.1';
+// TODO: Encapsulate the Map within a module or class with controlled access methods, or use Elysia's state management
 export const lastRequestTime = new Map<string, number>();
 
 /**
@@ -37,6 +44,7 @@ interface Task {
   status: 'pending' | 'in-progress' | 'completed';
 }
 
+// TODO: Add try-catch blocks around Bun.file operations in getTasks and saveTasks to handle potential file system errors
 /**
  * Best practice for returning a JSON file type-safely.
  * @returns tasks.json
@@ -72,9 +80,10 @@ export const echo = new Elysia().group('/echo', (app) =>
       return echoData;
     },
     {
+      // TODO: Extract validation constraints to named constants: MIN_USERNAME_LENGTH = 3, MIN_AGE = 1, MIN_DESCRIPTION_LENGTH = 4
       body: t.Object({
-        username: t.String({ minLength: 3 }),
-        age: t.Number({ minimum: 1 }),
+        username: t.String({ minLength: MIN_USERNAME_LENGTH }),
+        age: t.Number({ minimum: MIN_AGE }),
       }),
     }
   )
@@ -86,6 +95,14 @@ export const echo = new Elysia().group('/echo', (app) =>
  */
 export const taskGroup = new Elysia().group('/tasks', (app) =>
   app
+
+    /**
+     * onError taskGroup global.
+     */
+    .onError(({ error }) => {
+      return { error: error.message, timestamp: new Date().toISOString() };
+    })
+
     /**
      * GET /tasks/all
      * Returns all tasks,
@@ -96,7 +113,6 @@ export const taskGroup = new Elysia().group('/tasks', (app) =>
       return await getTasks();
     })
 
-    // TODO: M7 Add afterHandle() for custom headers
     // TODO: M8 Add onError whether globally or locally for custom error response. also formats it consistently all across the board.
     /**
      * GET /tasks/:id
@@ -111,7 +127,7 @@ export const taskGroup = new Elysia().group('/tasks', (app) =>
 
         if (!getTaskById) {
           set.status = 404;
-          return { error: 'Task not found' };
+          throw new Error(ERROR_TASK_NOT_FOUND);
         }
 
         set.status = 200;
@@ -121,10 +137,20 @@ export const taskGroup = new Elysia().group('/tasks', (app) =>
         params: t.Object({
           id: t.Numeric(),
         }),
+        // Shi, I might need to keep everything locally for now because I haven't figured out how to make it global across the state.
+        // Don't repeat yourself I know, I just don't want to force myself.
+        beforeHandle: ({ store }) => {
+          (store as any).capturedAt = Date.now();
+        },
+        afterHandle: ({ store, set }) => {
+          const elapsed = Date.now() - (store as any).capturedAt;
+          set.headers['X-Response-Time'] = String(`${elapsed} ms`);
+          set.headers['X-Powered-By'] = 'Elysia + Bun';
+          set.headers['Access-Control-Allow-Origin'] = '*';
+        },
       }
     )
 
-    // TODO: M6 Add beforeHandle() for rate limiting
     /**
      * POST /tasks
      * Add new task to the list.
@@ -148,19 +174,20 @@ export const taskGroup = new Elysia().group('/tasks', (app) =>
       },
       {
         beforeHandle: ({ set }) => {
-          const ip = '127.0.0.1';
           const now = Date.now();
-          const last = lastRequestTime.get(ip);
+          const last = lastRequestTime.get(IP);
 
-          if (last && now - last < 2000) {
+          if (last && now - last < RATE_LIMIT_MS) {
             set.status = 429;
-            return { error: 'Too many request' };
+            throw new Error('Too many request, bud. Slow down');
           }
 
-          lastRequestTime.set(ip, now);
+          // TODO: Add JSDoc comment to POST /tasks endpoint noting the rate limiting side effect, or refactor to use Elysia plugins for cross-cutting concerns
+          lastRequestTime.set(IP, now);
         },
+        // TODO: Extract the task validation schema to a shared constant and reuse with t.Partial(TASK_SCHEMA)
         body: t.Object({
-          description: t.String({ minLength: 4 }),
+          description: t.String({ minLength: MIN_DESCRIPTION_LENGTH }),
           status: t.UnionEnum(['pending', 'in-progress', 'completed']),
         }),
       }
@@ -178,7 +205,7 @@ export const taskGroup = new Elysia().group('/tasks', (app) =>
 
         if (taskIndex === -1) {
           set.status = 404;
-          return { error: 'Task not found ¯\\_(ツ)_/¯' };
+          throw new Error(ERROR_TASK_NOT_FOUND);
         }
 
         tasks[taskIndex] = {
@@ -199,7 +226,7 @@ export const taskGroup = new Elysia().group('/tasks', (app) =>
         }),
         body: t.Partial(
           t.Object({
-            description: t.String({ minLength: 4 }),
+            description: t.String({ minLength: MIN_DESCRIPTION_LENGTH }),
             status: t.UnionEnum(['pending', 'in-progress', 'completed']),
           })
         ),
@@ -214,7 +241,7 @@ export const taskGroup = new Elysia().group('/tasks', (app) =>
 
         if (remainingTask.length === tasks.length) {
           set.status = 404;
-          return { error: 'Task not found ¯\\_(ツ)_/¯' };
+          throw new Error(ERROR_TASK_NOT_FOUND);
         }
 
         await saveTasks(remainingTask);
@@ -239,8 +266,12 @@ export const app = new Elysia()
     author: 'Tegar Wijaya Kusuma',
   }))
 
-  //TODO: M9 Add derive for returning metadata (IP, timestamps, user-agent)
+  .get('/info', async ({ server, request }) => {
+    const socket = server?.requestIP(request);
+    return { address: socket?.address };
+  })
 
+  //TODO: M9 Add derive for returning metadata (IP, timestamps, user-agent)
   // Contains echo, taskGroup and Swagger Elysia .group()
   .use(echo)
   .use(taskGroup)

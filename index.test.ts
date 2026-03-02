@@ -8,7 +8,6 @@
 import { it, expect, describe, spyOn, beforeEach } from 'bun:test';
 import { app } from './index2';
 import { lastRequestTime } from './index2';
-import { resolve } from 'bun';
 
 const BASE_URL = 'http://localhost:3000';
 

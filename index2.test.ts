@@ -6,10 +6,13 @@
  * @date 26 - 27 February 2026
  */
 
-import { describe, expect, it, spyOn } from 'bun:test';
+import { describe, expect, it, spyOn, beforeEach } from 'bun:test';
 import { app } from './index2';
+import { lastRequestTime } from './index2';
 
 const BASE_URL = 'http://localhost:3000';
+const ERROR_TASK_NOT_FOUND = { error: 'Task not found ¯\\_(ツ)_/¯' };
+const IP = '127.0.0.1';
 
 interface Task {
   id: number;
@@ -22,7 +25,7 @@ interface Task {
  * Covering the REST API Task CRUD
  * 100% covered
  */
-describe('Testing /root, /wildcards and /echo responsiveness', () => {
+describe('Testing /root, /wildcards, /echo, and /info responsiveness', () => {
   describe('GET /root', () => {
     it('Should return kaomoji and author (me)', async () => {
       const response = await app.handle(
@@ -145,9 +148,7 @@ describe('Testing taskGroup', () => {
   describe('GET /tasks/:id and 404', () => {
     it('Should return a single task with params', async () => {
       spyOn(Bun, 'file').mockReturnValue({
-        json: async () => [
-          { id: 671289, description: 'check this out!', status: 'pending' },
-        ],
+        json: async () => [{ id: 671289, description: 'check this out!', status: 'pending' }],
 
         exists: async () => true,
       } as unknown as ReturnType<typeof Bun.file>);
@@ -169,9 +170,7 @@ describe('Testing taskGroup', () => {
 
     it('Should return 404 for non-existent id', async () => {
       spyOn(Bun, 'file').mockReturnValue({
-        json: async () => [
-          { id: 12728, description: 'testerr', status: 'pending' },
-        ],
+        json: async () => [{ id: 12728, description: 'testerr', status: 'pending' }],
 
         exists: async () => true,
       } as unknown as ReturnType<typeof Bun.file>);
@@ -184,16 +183,37 @@ describe('Testing taskGroup', () => {
 
       const faultyTask = await response.json();
       expect(response.status).toBe(404);
-      expect(faultyTask).toEqual({ error: 'Task not found' });
+      expect(faultyTask).toHaveProperty('error', 'Task not found, unfortunately.');
+      expect(faultyTask).toHaveProperty('timestamp');
+    });
+
+    describe('GET /tasks/:id headers', () => {
+      it('Should return multiple headers', async () => {
+        spyOn(Bun, 'file').mockReturnValue({
+          json: async () => [
+            { id: 76318, description: 'lets get this over with', status: 'in-progress' },
+          ],
+          exists: async () => true,
+        } as unknown as ReturnType<typeof Bun.file>);
+
+        const response = await app.handle(
+          new Request(`${BASE_URL}/tasks/76318`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+          })
+        );
+
+        // TODO: I feel like you could mock the function of the X-Response-Time. But I'll leave it for now.
+        expect(response.headers.get('X-Powered-By')).toBe('Elysia + Bun');
+        expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
+      });
     });
   });
 
   describe('POST /tasks', () => {
     it('Should Add a new task to the list', async () => {
       spyOn(Bun, 'file').mockReturnValue({
-        json: async () => [
-          { id: 1772127166755, description: 'same here', status: 'completed' },
-        ],
+        json: async () => [{ id: 1772127166755, description: 'same here', status: 'completed' }],
 
         exists: async () => true,
       } as unknown as ReturnType<typeof Bun.file>);
@@ -220,9 +240,7 @@ describe('Testing taskGroup', () => {
 
     it('Should return 422 for an invalid description', async () => {
       spyOn(Bun, 'file').mockReturnValue({
-        json: async () => [
-          { id: 219812, description: 'buy coffee', status: 'pending' },
-        ],
+        json: async () => [{ id: 219812, description: 'buy coffee', status: 'pending' }],
         exists: async () => true,
       } as unknown as ReturnType<typeof Bun.file>);
 
@@ -242,9 +260,7 @@ describe('Testing taskGroup', () => {
 
     it('Should return 422 for an invalid status', async () => {
       spyOn(Bun, 'file').mockReturnValue({
-        json: async () => [
-          { id: 219812, description: 'buy coffee', status: 'pending' },
-        ],
+        json: async () => [{ id: 219812, description: 'buy coffee', status: 'pending' }],
         exists: async () => true,
       } as unknown as ReturnType<typeof Bun.file>);
 
@@ -260,6 +276,64 @@ describe('Testing taskGroup', () => {
       );
 
       expect(response.status).toBe(422);
+    });
+
+    describe('POST /tasks rate-limiting', () => {
+      beforeEach(() => {
+        lastRequestTime.clear();
+      });
+
+      it('Should block second request within 2 seconds', async () => {
+        spyOn(Bun, 'file').mockReturnValue({
+          json: async () => [{ id: 78129, description: 'something here', status: 'completed' }],
+          exists: async () => true,
+        } as unknown as ReturnType<typeof Bun.file>);
+
+        spyOn(Bun, 'write').mockResolvedValue(2121);
+
+        const first = await app.handle(
+          new Request(`${BASE_URL}/tasks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              description: 'first request',
+              status: 'pending',
+            }),
+          })
+        );
+
+        expect(first.status).toBe(201);
+
+        const second = await app.handle(
+          new Request(`${BASE_URL}/tasks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              description: 'first request',
+              status: 'pending',
+            }),
+          })
+        );
+
+        const secondResponse = await second.json();
+        expect(second.status).toBe(429);
+        expect(secondResponse).toHaveProperty('error', 'Too many request, bud. Slow down');
+        expect(secondResponse).toHaveProperty('timestamp');
+      });
+    });
+
+    it('Should return 201 after 2s', async () => {
+      lastRequestTime.set(IP, Date.now() - 3000);
+
+      const response = await app.handle(
+        new Request(`${BASE_URL}/tasks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ description: 'should pass by now', status: 'completed' }),
+        })
+      );
+
+      expect(response.status).toBe(201);
     });
   });
 
@@ -330,9 +404,7 @@ describe('Testing taskGroup', () => {
 
     it('Should return 404 for invalid ID', async () => {
       spyOn(Bun, 'file').mockReturnValue({
-        json: async () => [
-          { id: 12728, description: 'tester', status: 'pending' },
-        ],
+        json: async () => [{ id: 12728, description: 'tester', status: 'pending' }],
 
         exists: async () => true,
       } as unknown as ReturnType<typeof Bun.file>);
@@ -348,7 +420,8 @@ describe('Testing taskGroup', () => {
 
       const faulty = await response.json();
       expect(response.status).toBe(404);
-      expect(faulty).toEqual({ error: 'Task not found ¯\\_(ツ)_/¯' });
+      expect(faulty).toHaveProperty('error', 'Task not found, unfortunately.');
+      expect(faulty).toHaveProperty('timestamp');
     });
   });
 
@@ -387,9 +460,7 @@ describe('Testing taskGroup', () => {
 
     it('Should return 404 for non-existent task', async () => {
       spyOn(Bun, 'file').mockReturnValue({
-        json: async () => [
-          { id: 87129, description: 'hey, ho', status: 'completed' },
-        ],
+        json: async () => [{ id: 87129, description: 'hey, ho', status: 'completed' }],
         exists: async () => true,
       } as unknown as ReturnType<typeof Bun.file>);
 
@@ -401,7 +472,8 @@ describe('Testing taskGroup', () => {
 
       const faultyDeletion = await response.json();
       expect(response.status).toBe(404);
-      expect(faultyDeletion).toEqual({ error: 'Task not found ¯\\_(ツ)_/¯' });
+      expect(faultyDeletion).toHaveProperty('error', 'Task not found, unfortunately.');
+      expect(faultyDeletion).toHaveProperty('timestamp');
     });
   });
 });
